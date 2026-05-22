@@ -1,4 +1,7 @@
+"use client"
+
 import Tiptap from "@/components/editor"
+import { useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -14,8 +17,32 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { Document as Doc } from "@/types/document.types";
 
 export default function Home() {
+
+  const now = new Date(); 
+  const [selectedDocId, setSelectedDocId] = useState("1");
+  const Docs: Doc[] = [
+    {
+      id: "1",
+      title: "1st document",
+      content: "<p>Hello</p>",
+      createdAt: now,
+      updatedAt: now 
+    },
+    {
+      id: "2",
+      title: "1st document",
+      content: "<p>Hello</p>",
+      createdAt: now,
+      updatedAt: now
+    }
+  ];
+
+  const selectedDoc =
+  Docs.find(doc => doc.id === selectedDocId)!;
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -42,13 +69,10 @@ export default function Home() {
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
+        <div className="p-4">
+          <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min">
+            <Tiptap />
           </div>
-          <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min" />
         </div>
       </SidebarInset>
     </SidebarProvider>

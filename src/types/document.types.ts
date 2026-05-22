@@ -1,7 +1,8 @@
-export type Document = {
+export interface Document {
   id: string,
   title: string,
   content: string,
   createdAt: Date,
-  lastEdited: Date
+  updatedAt: Date,
+  parentId?: string
 }
