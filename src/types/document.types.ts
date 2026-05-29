@@ -4,5 +4,5 @@ export interface Document {
   content: string,
   createdAt: Date,
   updatedAt: Date,
-  parentId?: string
+  parentId: string | null
 }

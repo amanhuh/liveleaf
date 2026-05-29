@@ -29,14 +29,24 @@ export default function Home() {
       title: "1st document",
       content: "<p>Hello</p>",
       createdAt: now,
-      updatedAt: now 
+      updatedAt: now,
+      parentId: null
     },
     {
       id: "2",
-      title: "1st document",
+      title: "2nd document",
       content: "<p>Hello</p>",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      parentId: null
+    },
+    {
+      id: "3",
+      title: "3rd document",
+      content: "<p>Hello</p>",
+      createdAt: now,
+      updatedAt: now,
+      parentId: "1"
     }
   ];
 
@@ -45,7 +55,7 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar documents={Docs} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />

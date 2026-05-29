@@ -1,12 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
-
+import * as React from "react";
+import { useState } from "react";
+import { Document as Doc } from "@/types/document.types";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -19,40 +20,26 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { FileIcon, ChevronRightIcon, FolderIcon } from "lucide-react"
+} from "@/components/ui/sidebar";
+import {
+  FileIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  FolderIcon,
+} from "lucide-react";
 
-// This is sample data.
-const data = {
-  tree: [
-    [
-      "app",
-      [
-        "api",
-        ["hello", ["route.ts"]],
-        "page.tsx",
-        "layout.tsx",
-        ["blog", ["page.tsx"]],
-      ],
-    ],
-    [
-      "components",
-      ["ui", "button.tsx", "card.tsx"],
-      "header.tsx",
-      "footer.tsx",
-    ],
-    ["lib", ["util.ts"]],
-    ["public", "favicon.ico", "vercel.svg"],
-    ".eslintrc.json",
-    ".gitignore",
-    "next.config.js",
-    "tailwind.config.js",
-    "package.json",
-    "README.md",
-  ],
-}
+export function AppSidebar({
+  documents,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  documents: Doc[];
+}) {
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null,
+  );
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const rootDocs = documents.filter((doc) => doc.parentId === null);
+
   return (
     <Sidebar {...props}>
       <SidebarContent>
@@ -60,8 +47,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Files</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {data.tree.map((item, index) => (
-                <Tree key={index} item={item} />
+              {rootDocs.map((doc) => (
+                <Tree
+                  key={doc.id}
+                  item={doc}
+                  docs={documents}
+                  selectedDocumentId={selectedDocumentId}
+                  onSelect={setSelectedDocumentId}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -69,49 +62,71 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
 
-type TreeItem = string | TreeItem[]
+function Tree({
+  item,
+  docs,
+  selectedDocumentId,
+  onSelect,
+}: {
+  item: Doc;
+  docs: Doc[];
+  selectedDocumentId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const children = docs.filter((doc) => doc.parentId === item.id);
 
-function Tree({ item }: { item: TreeItem }) {
-  const [name, ...items] = Array.isArray(item) ? item : [item]
+  const hasChildren = children.length > 0;
 
-  if (!items.length) {
+  if (hasChildren) {
     return (
-      <SidebarMenuButton
-        isActive={name === "button.tsx"}
-        className="data-[active=true]:bg-transparent"
-      >
-        <FileIcon
-        />
-        {name}
-      </SidebarMenuButton>
-    )
+      <SidebarMenuItem>
+        <Collapsible className="group/collapsible">
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton
+              isActive={selectedDocumentId == item.id}
+              onClick={() => onSelect(item.id)}
+              className="data-[active=true]:bg-accent"
+            >
+              <FileIcon />
+              {item.title}
+              <ChevronRightIcon
+                className="
+                  transition-transform
+                  group-data-[state=open]/collapsible:rotate-90
+                  ml-auto
+                "
+              />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {children.map((child) => (
+                <Tree
+                  key={child.id}
+                  item={child}
+                  docs={docs}
+                  selectedDocumentId={selectedDocumentId}
+                  onSelect={onSelect}
+                />
+              ))}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </Collapsible>
+      </SidebarMenuItem>
+    );
   }
 
   return (
-    <SidebarMenuItem>
-      <Collapsible
-        className="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90"
-        defaultOpen={name === "components" || name === "ui"}
-      >
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton>
-            <ChevronRightIcon className="transition-transform" />
-            <FolderIcon
-            />
-            {name}
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            {items.map((subItem, index) => (
-              <Tree key={index} item={subItem} />
-            ))}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </Collapsible>
-    </SidebarMenuItem>
-  )
+    <SidebarMenuButton
+      isActive={selectedDocumentId == item.id}
+      onClick={() => onSelect(item.id)}
+      className="data-[active=true]:bg-accent"
+    >
+      <FileIcon />
+      {item.title}
+    </SidebarMenuButton>
+  );
 }
