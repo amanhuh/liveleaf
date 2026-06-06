@@ -36,6 +36,12 @@ interface DocumentStore {
   selectedDocumentId: string | null;
 
   setSelectedDocumentId: (id: string) => void;
+
+  createDocument: (parentId: string | null) => void;
+
+  updateDocument: (id: string, updates: Partial<Document>) => void;
+
+  deleteDocument: (id: string) => void;
 }
 
 export const useDocumentStore = create<DocumentStore>((set) => ({
@@ -46,4 +52,35 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     set({
       selectedDocumentId: id,
     }),
+
+  createDocument: (parentId) =>
+    set((state) => ({
+      documents: [
+        ...state.documents,
+        {
+          id: crypto.randomUUID(),
+          title: "Untitled",
+          content: "",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          parentId,
+        },
+      ],
+    })),
+  updateDocument: (id, updates) =>
+    set((state) => ({
+      documents: state.documents.map((doc) =>
+        doc.id === id
+          ? {
+              ...doc,
+              ...updates,
+              updatedAt: new Date(),
+            }
+          : doc,
+      ),
+    })),
+  deleteDocument: (id) =>
+    set((state) => ({
+      documents: state.documents.filter((doc) => doc.id !== id),
+    })),
 }));
