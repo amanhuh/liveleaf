@@ -52,7 +52,6 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
     set({
       selectedDocumentId: id,
     }),
-
   createDocument: (parentId) =>
     set((state) => ({
       documents: [

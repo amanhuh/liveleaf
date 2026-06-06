@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
 import { Document as Doc } from "@/types/document.types";
 import {
   Collapsible,
@@ -21,13 +20,8 @@ import {
   SidebarMenuSub,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-  FileIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-  FolderIcon,
-} from "lucide-react";
-
+import { FileIcon, ChevronRightIcon } from "lucide-react";
+import { useDocumentStore } from "@/stores/document-store";
 
 export function AppSidebar({
   documents,
@@ -35,10 +29,6 @@ export function AppSidebar({
 }: React.ComponentProps<typeof Sidebar> & {
   documents: Doc[];
 }) {
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
-    null,
-  );
-
   const rootDocs = documents.filter((doc) => doc.parentId === null);
 
   return (
@@ -49,13 +39,7 @@ export function AppSidebar({
           <SidebarGroupContent>
             <SidebarMenu>
               {rootDocs.map((doc) => (
-                <Tree
-                  key={doc.id}
-                  item={doc}
-                  docs={documents}
-                  selectedDocumentId={selectedDocumentId}
-                  onSelect={setSelectedDocumentId}
-                />
+                <Tree key={doc.id} item={doc} docs={documents} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -66,19 +50,16 @@ export function AppSidebar({
   );
 }
 
-function Tree({
-  item,
-  docs,
-  selectedDocumentId,
-  onSelect,
-}: {
-  item: Doc;
-  docs: Doc[];
-  selectedDocumentId: string | null;
-  onSelect: (id: string) => void;
-}) {
-  const children = docs.filter((doc) => doc.parentId === item.id);
+function Tree({ item, docs }: { item: Doc; docs: Doc[] }) {
+  const selectedDocumentId = useDocumentStore(
+    (state) => state.selectedDocumentId,
+  );
 
+  const setSelectedDocumentId = useDocumentStore(
+    (state) => state.setSelectedDocumentId,
+  );
+
+  const children = docs.filter((doc) => doc.parentId === item.id);
   const hasChildren = children.length > 0;
 
   if (hasChildren) {
@@ -88,7 +69,7 @@ function Tree({
           <CollapsibleTrigger asChild>
             <SidebarMenuButton
               isActive={selectedDocumentId == item.id}
-              onClick={() => onSelect(item.id)}
+              onClick={() => setSelectedDocumentId(item.id)}
               className="data-[active=true]:bg-accent"
             >
               <FileIcon />
@@ -109,8 +90,6 @@ function Tree({
                   key={child.id}
                   item={child}
                   docs={docs}
-                  selectedDocumentId={selectedDocumentId}
-                  onSelect={onSelect}
                 />
               ))}
             </SidebarMenuSub>
@@ -123,7 +102,7 @@ function Tree({
   return (
     <SidebarMenuButton
       isActive={selectedDocumentId == item.id}
-      onClick={() => onSelect(item.id)}
+      onClick={() => setSelectedDocumentId(item.id)}
       className="data-[active=true]:bg-accent"
     >
       <FileIcon />
