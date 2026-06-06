@@ -28,6 +28,7 @@ import {
   FolderIcon,
 } from "lucide-react";
 
+
 export function AppSidebar({
   documents,
   ...props

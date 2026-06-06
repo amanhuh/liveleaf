@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Tiptap from "@/components/editor"
-import { useState } from "react"
-import { AppSidebar } from "@/components/app-sidebar"
+import Tiptap from "@/components/editor";
+import { useState } from "react";
+import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,52 +10,24 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Document as Doc } from "@/types/document.types";
+} from "@/components/ui/sidebar";
+import { useDocumentStore } from "@/stores/document-store";
 
 export default function Home() {
+  //const [selectedDocId, setSelectedDocId] = useState("1");
+  const documents = useDocumentStore((state) => state.documents);
 
-  const now = new Date(); 
-  const [selectedDocId, setSelectedDocId] = useState("1");
-  const Docs: Doc[] = [
-    {
-      id: "1",
-      title: "1st document",
-      content: "<p>Hello</p>",
-      createdAt: now,
-      updatedAt: now,
-      parentId: null
-    },
-    {
-      id: "2",
-      title: "2nd document",
-      content: "<p>Hello</p>",
-      createdAt: now,
-      updatedAt: now,
-      parentId: null
-    },
-    {
-      id: "3",
-      title: "3rd document",
-      content: "<p>Hello</p>",
-      createdAt: now,
-      updatedAt: now,
-      parentId: "1"
-    }
-  ];
-
-  const selectedDoc =
-  Docs.find(doc => doc.id === selectedDocId)!;
+  //const selectedDoc = Docs.find((doc) => doc.id === selectedDocId)!;
 
   return (
     <SidebarProvider>
-      <AppSidebar documents={Docs} />
+      <AppSidebar documents={documents} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
@@ -86,5 +58,5 @@ export default function Home() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
