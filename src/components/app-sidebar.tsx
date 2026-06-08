@@ -14,7 +14,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -23,12 +22,8 @@ import {
 import { FileIcon, ChevronRightIcon } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 
-export function AppSidebar({
-  documents,
-  ...props
-}: React.ComponentProps<typeof Sidebar> & {
-  documents: Doc[];
-}) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const documents = useDocumentStore((state) => state.documents);
   const rootDocs = documents.filter((doc) => doc.parentId === null);
 
   return (
@@ -86,11 +81,7 @@ function Tree({ item, docs }: { item: Doc; docs: Doc[] }) {
           <CollapsibleContent>
             <SidebarMenuSub>
               {children.map((child) => (
-                <Tree
-                  key={child.id}
-                  item={child}
-                  docs={docs}
-                />
+                <Tree key={child.id} item={child} docs={docs} />
               ))}
             </SidebarMenuSub>
           </CollapsibleContent>
