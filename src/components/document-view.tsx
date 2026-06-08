@@ -14,17 +14,30 @@ import { Fragment } from "react";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useDocumentStore } from "@/stores/document-store";
 import { Document } from "@/types/document.types";
+import { useRef, useEffect } from "react";
 
 export default function DocumentView() {
   const documents = useDocumentStore((state) => state.documents);
   const selectedDocumentId = useDocumentStore(
     (state) => state.selectedDocumentId,
   );
-  const selectedDocument = documents.find((doc) => doc.id === selectedDocumentId);
-  console.log(selectedDocument)
+  const updateDocument = useDocumentStore((state) => state.updateDocument);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const selectedDocument = documents.find(
+    (doc) => doc.id === selectedDocumentId,
+  );
   const breadcrumb = selectedDocumentId
     ? getBreadCrumbs(documents, selectedDocumentId)
     : [];
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [selectedDocument?.title]);
 
   return (
     <SidebarInset>
@@ -52,7 +65,21 @@ export default function DocumentView() {
         </Breadcrumb>
       </header>
       <div className="px-18 py-14">
-        <p className="font-bold text-3xl mb-14">{selectedDocument?.title}</p>
+        <textarea
+          placeholder="New Page"
+          rows={1}
+          ref={textareaRef}
+          className="font-bold text-3xl mb-7 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none w-2/5"
+          value={selectedDocument?.title}
+          onChange={(e) => {
+            if (selectedDocument?.id) {
+              updateDocument(selectedDocument.id, {
+                title: e.target.value,
+              });
+            }
+          }}
+
+        />
         <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min text-lg ">
           <Tiptap />
         </div>
