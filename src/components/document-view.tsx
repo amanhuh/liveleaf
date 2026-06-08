@@ -53,9 +53,9 @@ export default function DocumentView() {
               <Fragment key={doc.id}>
                 <BreadcrumbItem className="hidden md:block">
                   {index === breadcrumb.length - 1 ? (
-                    <BreadcrumbPage>{doc.title}</BreadcrumbPage>
+                    <BreadcrumbPage>{doc.title.trim() ? doc.title : "New Page"}</BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink href="#">{doc.title}</BreadcrumbLink>
+                    <BreadcrumbLink href="#">{doc.title.trim() ? doc.title : "New Page"}</BreadcrumbLink>
                   )}
                 </BreadcrumbItem>
                 {index !== breadcrumb.length - 1 && <BreadcrumbSeparator />}

@@ -57,6 +57,7 @@ function Tree({ item, docs }: { item: Doc; docs: Doc[] }) {
   const children = docs.filter((doc) => doc.parentId === item.id);
   const hasChildren = children.length > 0;
 
+  if (!item.title) console.log(item.title);
   if (hasChildren) {
     return (
       <SidebarMenuItem>
@@ -68,7 +69,7 @@ function Tree({ item, docs }: { item: Doc; docs: Doc[] }) {
               className="data-[active=true]:bg-accent"
             >
               <FileIcon />
-              {item.title}
+              {item.title.trim() ? item.title : "New Page"}
               <ChevronRightIcon
                 className="
                   transition-transform
@@ -97,7 +98,7 @@ function Tree({ item, docs }: { item: Doc; docs: Doc[] }) {
       className="data-[active=true]:bg-accent"
     >
       <FileIcon />
-      {item.title}
+      {item.title.trim() ? item.title : "New Page"}
     </SidebarMenuButton>
   );
 }

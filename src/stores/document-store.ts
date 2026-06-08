@@ -88,6 +88,7 @@ export const useDocumentStore = create<DocumentStore>()(
     {
       name: "document-store",
       partialize: (state) => ({
+        documents: state.documents,
         selectedDocumentId: state.selectedDocumentId,
       }),
     },
