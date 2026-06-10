@@ -15,12 +15,17 @@ import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useDocumentStore } from "@/stores/document-store";
 import { Document } from "@/types/document.types";
 import { useRef, useEffect } from "react";
+import { useParams } from "next/navigation";
 
 export default function DocumentView() {
+  const params = useParams<{
+    documentId: string;
+  }>();
+  const selectedDocumentId = params.documentId;
   const documents = useDocumentStore((state) => state.documents);
-  const selectedDocumentId = useDocumentStore(
-    (state) => state.selectedDocumentId,
-  );
+  // const selectedDocumentId = useDocumentStore(
+  //   (state) => state.selectedDocumentId,
+  // );
   const updateDocument = useDocumentStore((state) => state.updateDocument);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const selectedDocument = documents.find(
@@ -95,9 +100,9 @@ export default function DocumentView() {
             onChange={(content) =>
               selectedDocument?.id &&
               updateDocument(selectedDocument.id, {
-                content
+                content,
               })
-            } 
+            }
           />
         </div>
       </div>

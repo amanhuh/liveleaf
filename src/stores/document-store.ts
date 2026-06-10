@@ -35,6 +35,7 @@ const mockDocuments: Document[] = [
 interface DocumentStore {
   documents: Document[];
   selectedDocumentId: string | null;
+  expandedDocumentIds: string[];
 
   setSelectedDocumentId: (id: string) => void;
 
@@ -43,6 +44,8 @@ interface DocumentStore {
   updateDocument: (id: string, updates: Partial<Document>) => void;
 
   deleteDocument: (id: string) => void;
+
+  toggleExpanded: (id: string) => void;
 }
 
 export const useDocumentStore = create<DocumentStore>()(
@@ -50,6 +53,7 @@ export const useDocumentStore = create<DocumentStore>()(
     (set) => ({
       documents: mockDocuments,
       selectedDocumentId: null,
+      expandedDocumentIds: [],
       setSelectedDocumentId: (id) =>
         set({
           selectedDocumentId: id,
@@ -84,12 +88,21 @@ export const useDocumentStore = create<DocumentStore>()(
         set((state) => ({
           documents: state.documents.filter((doc) => doc.id !== id),
         })),
+      toggleExpanded: (id) =>
+        set((state) => ({
+          expandedDocumentIds: state.expandedDocumentIds.includes(id)
+            ? state.expandedDocumentIds.filter(
+                (expandedId) => expandedId !== id,
+              )
+            : [...state.expandedDocumentIds, id],
+        })),
     }),
     {
       name: "document-store",
       partialize: (state) => ({
         documents: state.documents,
         selectedDocumentId: state.selectedDocumentId,
+        expandedDocumentIds: [],
       }),
     },
   ),
