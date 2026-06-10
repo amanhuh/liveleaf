@@ -30,7 +30,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar {...props}>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Files</SidebarGroupLabel>
+          <SidebarGroupLabel>Documents</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {rootDocs.map((doc) => (

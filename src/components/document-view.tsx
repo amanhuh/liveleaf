@@ -26,6 +26,9 @@ export default function DocumentView() {
   const selectedDocument = documents.find(
     (doc) => doc.id === selectedDocumentId,
   );
+  const setSelectedDocumentId = useDocumentStore(
+    (state) => state.setSelectedDocumentId,
+  );
   const breadcrumb = selectedDocumentId
     ? getBreadCrumbs(documents, selectedDocumentId)
     : [];
@@ -53,9 +56,16 @@ export default function DocumentView() {
               <Fragment key={doc.id}>
                 <BreadcrumbItem className="hidden md:block">
                   {index === breadcrumb.length - 1 ? (
-                    <BreadcrumbPage>{doc.title.trim() ? doc.title : "New Page"}</BreadcrumbPage>
+                    <BreadcrumbPage>
+                      {doc.title.trim() ? doc.title : "New Page"}
+                    </BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink href="#">{doc.title.trim() ? doc.title : "New Page"}</BreadcrumbLink>
+                    <BreadcrumbLink
+                      onClick={() => setSelectedDocumentId(doc.id)}
+                      href="#"
+                    >
+                      {doc.title.trim() ? doc.title : "New Page"}
+                    </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>
                 {index !== breadcrumb.length - 1 && <BreadcrumbSeparator />}
@@ -78,10 +88,17 @@ export default function DocumentView() {
               });
             }
           }}
-
         />
         <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min text-lg ">
-          <Tiptap />
+          <Tiptap
+            content={selectedDocument?.content ?? ""}
+            onChange={(content) =>
+              selectedDocument?.id &&
+              updateDocument(selectedDocument.id, {
+                content
+              })
+            } 
+          />
         </div>
       </div>
     </SidebarInset>
