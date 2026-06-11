@@ -19,7 +19,12 @@ import {
   SidebarMenuSub,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { FileIcon, ChevronRightIcon } from "lucide-react";
+import {
+  FileIcon,
+  ChevronRightIcon,
+  EllipsisIcon,
+  PlusIcon,
+} from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 import { useParams, useRouter } from "next/navigation";
 
@@ -64,24 +69,16 @@ function Tree({
   item: Doc;
   docs: Doc[];
 }) {
-  // const selectedDocumentId = useDocumentStore(
-  //   (state) => state.selectedDocumentId,
-  // );
-
   const router = useRouter();
-  const setSelectedDocumentId = useDocumentStore(
-    (state) => state.setSelectedDocumentId,
-  );
 
-  const expandedDocumentIds = useDocumentStore((state) => state.expandedDocumentIds);
-  const toggleExpanded = useDocumentStore(
-    (state) => state.toggleExpanded,
+  const expandedDocumentIds = useDocumentStore(
+    (state) => state.expandedDocumentIds,
   );
+  const toggleExpanded = useDocumentStore((state) => state.toggleExpanded);
 
   const children = docs.filter((doc) => doc.parentId === item.id);
   const hasChildren = children.length > 0;
 
-  if (!item.title) console.log(item.title);
   if (hasChildren) {
     return (
       <SidebarMenuItem>
@@ -94,17 +91,25 @@ function Tree({
             <SidebarMenuButton
               isActive={selectedDocumentId == item.id}
               onClick={() => router.push(`/d/${item.id}`)}
-              className="data-[active=true]:bg-accent"
+              className="group/item data-[active=true]:bg-accent cursor-pointer"
             >
               <FileIcon />
               {item.title.trim() ? item.title : "New Page"}
-              <ChevronRightIcon
-                className="
-                  transition-transform
+              <div className="flex ml-auto gap-2">
+                <EllipsisIcon className="ml-auto hidden group-hover/item:block" />
+                <ChevronRightIcon
+                  className="
                   group-data-[state=open]/collapsible:rotate-90
-                  ml-auto
+                  group-hover/item:hidden
                 "
-              />
+                />
+                <PlusIcon
+                  className="
+                  hidden
+                  group-hover/item:block
+                "
+                />
+              </div>
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -128,10 +133,19 @@ function Tree({
     <SidebarMenuButton
       isActive={selectedDocumentId == item.id}
       onClick={() => router.push(`/d/${item.id}`)}
-      className="data-[active=true]:bg-accent"
+      className="group/item data-[active=true]:bg-accent cursor-pointer"
     >
       <FileIcon />
       {item.title.trim() ? item.title : "New Page"}
+      <div className="flex ml-auto gap-2">
+        <EllipsisIcon className="ml-auto hidden group-hover/item:block" />
+        <PlusIcon
+          className="
+            hidden
+            group-hover/item:block
+          "
+        />
+      </div>
     </SidebarMenuButton>
   );
 }
