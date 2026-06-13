@@ -32,46 +32,63 @@ const mockDocuments: Document[] = [
   },
 ];
 
+const initialState = {
+  documents: mockDocuments,
+  selectedDocumentId: null,
+  expandedDocumentIds: [],
+};
+
+type CreateDocumentOptions = {
+  parentId?: string;
+  title?: string;
+};
+
 interface DocumentStore {
   documents: Document[];
-  selectedDocumentId: string | null;
+  lastOpenedDocumentId: string | null;
   expandedDocumentIds: string[];
 
-  setSelectedDocumentId: (id: string) => void;
+  setLastOpenedDocumentId: (id: string) => void;
 
-  createDocument: (parentId: string | null) => void;
+  createDocument: (options: CreateDocumentOptions) => Document;
 
   updateDocument: (id: string, updates: Partial<Document>) => void;
 
   deleteDocument: (id: string) => void;
 
   toggleExpanded: (id: string) => void;
+
+  resetState: () => void;
 }
 
 export const useDocumentStore = create<DocumentStore>()(
   persist(
     (set) => ({
       documents: mockDocuments,
-      selectedDocumentId: null,
+      lastOpenedDocumentId: null,
       expandedDocumentIds: [],
-      setSelectedDocumentId: (id) =>
+      setLastOpenedDocumentId: (id) =>
         set({
-          selectedDocumentId: id,
+          lastOpenedDocumentId: id,
         }),
-      createDocument: (parentId) =>
+      createDocument: ({ parentId, title }: CreateDocumentOptions) => {
+        const newDocument: Document = {
+          id: crypto.randomUUID(),
+          title: title ?? "Untitled",
+          content: "",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          parentId: parentId ?? null,
+        };
         set((state) => ({
           documents: [
             ...state.documents,
-            {
-              id: crypto.randomUUID(),
-              title: "Untitled",
-              content: "",
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              parentId,
-            },
+            newDocument
           ],
-        })),
+        }));
+
+        return newDocument;
+      },
       updateDocument: (id, updates) =>
         set((state) => ({
           documents: state.documents.map((doc) =>
@@ -96,13 +113,14 @@ export const useDocumentStore = create<DocumentStore>()(
               )
             : [...state.expandedDocumentIds, id],
         })),
+      resetState: () => set(initialState),
     }),
     {
       name: "document-store",
       partialize: (state) => ({
         documents: state.documents,
-        selectedDocumentId: state.selectedDocumentId,
-        expandedDocumentIds: [],
+        lastOpenedDocumentId: state.lastOpenedDocumentId,
+        expandedDocumentIds: state.expandedDocumentIds,
       }),
     },
   ),

@@ -35,12 +35,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const selectedDocumentId = params.documentId;
   const documents = useDocumentStore((state) => state.documents);
   const rootDocs = documents.filter((doc) => doc.parentId === null);
-
+  const reset = useDocumentStore((state) => state.resetState);
   return (
     <Sidebar {...props}>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Documents</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            <span>Documents</span>
+            <PlusIcon className="ml-auto " />
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {rootDocs.map((doc) => (
@@ -75,7 +78,7 @@ function Tree({
     (state) => state.expandedDocumentIds,
   );
   const toggleExpanded = useDocumentStore((state) => state.toggleExpanded);
-
+  const createDocument = useDocumentStore((state) => state.createDocument);
   const children = docs.filter((doc) => doc.parentId === item.id);
   const hasChildren = children.length > 0;
 
@@ -99,15 +102,21 @@ function Tree({
                 <EllipsisIcon className="ml-auto hidden group-hover/item:block" />
                 <ChevronRightIcon
                   className="
-                  group-data-[state=open]/collapsible:rotate-90
-                  group-hover/item:hidden
-                "
+                    group-data-[state=open]/collapsible:rotate-90
+                    group-hover/item:hidden
+                  "
                 />
                 <PlusIcon
                   className="
-                  hidden
-                  group-hover/item:block
-                "
+                    hidden
+                    group-hover/item:block
+                  "
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const doc = createDocument({ parentId: item.id });
+                    router.push(`/d/${doc.id}`);
+                  }}
                 />
               </div>
             </SidebarMenuButton>
