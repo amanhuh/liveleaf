@@ -27,6 +27,11 @@ import {
 } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 import { useParams, useRouter } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams<{
@@ -48,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const doc = createDocument({ });
+                const doc = createDocument({});
                 router.push(`/d/${doc.id}`);
               }}
             />
@@ -88,6 +93,7 @@ function Tree({
   );
   const toggleExpanded = useDocumentStore((state) => state.toggleExpanded);
   const createDocument = useDocumentStore((state) => state.createDocument);
+  const expandDocument = useDocumentStore((state) => state.expandDocument);
   const children = docs.filter((doc) => doc.parentId === item.id);
   const hasChildren = children.length > 0;
 
@@ -115,18 +121,26 @@ function Tree({
                     group-hover/item:hidden
                   "
                 />
-                <PlusIcon
-                  className="
-                    hidden
-                    group-hover/item:block
-                  "
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const doc = createDocument({ parentId: item.id });
-                    router.push(`/d/${doc.id}`);
-                  }}
-                />
+                <Tooltip>
+                  <TooltipTrigger className="cursor-pointer" asChild>
+                    <PlusIcon
+                      className="
+                        hidden
+                        group-hover/item:block
+                      "
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const doc = createDocument({ parentId: item.id });
+                        expandDocument(item.id);
+                        router.push(`/d/${doc.id}`);
+                      }}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Add a page</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </SidebarMenuButton>
           </CollapsibleTrigger>
@@ -166,6 +180,7 @@ function Tree({
             e.preventDefault();
             e.stopPropagation();
             const doc = createDocument({ parentId: item.id });
+            expandDocument(item.id)
             router.push(`/d/${doc.id}`);
           }}
         />

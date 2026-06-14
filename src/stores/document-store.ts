@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import type { Document } from "@/types/document.types";
-import type { CreateDocumentOptions } from "@/types/document.types"
+import type { CreateDocumentOptions } from "@/types/document.types";
 import { persist } from "zustand/middleware";
 
 const now = new Date();
@@ -54,6 +54,8 @@ interface DocumentStore {
 
   toggleExpanded: (id: string) => void;
 
+  expandDocument: (id: string) => void;
+
   resetState: () => void;
 }
 
@@ -77,10 +79,7 @@ export const useDocumentStore = create<DocumentStore>()(
           parentId: parentId ?? null,
         };
         set((state) => ({
-          documents: [
-            ...state.documents,
-            newDocument
-          ],
+          documents: [...state.documents, newDocument],
         }));
 
         return newDocument;
@@ -107,6 +106,12 @@ export const useDocumentStore = create<DocumentStore>()(
             ? state.expandedDocumentIds.filter(
                 (expandedId) => expandedId !== id,
               )
+            : [...state.expandedDocumentIds, id],
+        })),
+      expandDocument: (id) =>
+        set((state) => ({
+          expandedDocumentIds: state.expandedDocumentIds.includes(id)
+            ? state.expandedDocumentIds
             : [...state.expandedDocumentIds, id],
         })),
       resetState: () => set(initialState),
