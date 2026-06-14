@@ -1,7 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-import { Document } from "@/types/document.types";
+import type { Document } from "@/types/document.types";
+import type { CreateDocumentOptions } from "@/types/document.types"
 import { persist } from "zustand/middleware";
 
 const now = new Date();
@@ -36,11 +37,6 @@ const initialState = {
   documents: mockDocuments,
   selectedDocumentId: null,
   expandedDocumentIds: [],
-};
-
-type CreateDocumentOptions = {
-  parentId?: string;
-  title?: string;
 };
 
 interface DocumentStore {

@@ -6,3 +6,8 @@ export interface Document {
   updatedAt: Date,
   parentId: string | null
 }
+
+export interface CreateDocumentOptions {
+  parentId?: string;
+  title?: string;
+};

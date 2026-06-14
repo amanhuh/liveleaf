@@ -33,16 +33,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     documentId: string;
   }>();
   const selectedDocumentId = params.documentId;
+  const router = useRouter();
   const documents = useDocumentStore((state) => state.documents);
   const rootDocs = documents.filter((doc) => doc.parentId === null);
-  const reset = useDocumentStore((state) => state.resetState);
+  const createDocument = useDocumentStore((state) => state.createDocument);
   return (
     <Sidebar {...props}>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>
             <span>Documents</span>
-            <PlusIcon className="ml-auto " />
+            <PlusIcon
+              className="ml-auto cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const doc = createDocument({ });
+                router.push(`/d/${doc.id}`);
+              }}
+            />
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -153,6 +162,12 @@ function Tree({
             hidden
             group-hover/item:block
           "
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const doc = createDocument({ parentId: item.id });
+            router.push(`/d/${doc.id}`);
+          }}
         />
       </div>
     </SidebarMenuButton>
