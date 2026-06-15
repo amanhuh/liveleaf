@@ -53,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const doc = createDocument({});
+                const doc = createDocument();
                 router.push(`/d/${doc.id}`);
               }}
             />
