@@ -39,6 +39,23 @@ const initialState = {
   expandedDocumentIds: [],
 };
 
+function getDescendantIds(
+  documents: Document[],
+  parentId: string
+): string[] {
+
+  const ids = [];
+
+  for (const doc of documents) {
+    if (doc.parentId == parentId) {
+      ids.push(doc.id)
+      ids.push(...getDescendantIds(documents, doc.id))
+    }
+  };
+
+  return ids;
+};
+
 interface DocumentStore {
   documents: Document[];
   lastOpenedDocumentId: string | null;
@@ -97,9 +114,11 @@ export const useDocumentStore = create<DocumentStore>()(
           ),
         })),
       deleteDocument: (id) =>
-        set((state) => ({
-          documents: state.documents.filter((doc) => doc.id !== id),
-        })),
+        set((state) => {
+          const descendantIds = getDescendantIds(state.documents, id)
+          const idsToDelete = [id, ...descendantIds];
+          return { documents: state.documents.filter((doc) => !idsToDelete.includes(doc.id)), expandDocumentIds: state.expandedDocumentIds.filter((id) => !idsToDelete.includes(id)) }
+        }),
       toggleExpanded: (id) =>
         set((state) => ({
           expandedDocumentIds: state.expandedDocumentIds.includes(id)
