@@ -23,7 +23,6 @@ import { DropdownMenuEllipsis } from "./actions/drorpdown-menu-ellipsis";
 import {
   FileIcon,
   ChevronRightIcon,
-  EllipsisIcon,
   PlusIcon,
 } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
@@ -33,6 +32,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams<{
@@ -97,13 +97,14 @@ function Tree({
   const expandDocument = useDocumentStore((state) => state.expandDocument);
   const children = docs.filter((doc) => doc.parentId === item.id);
   const hasChildren = children.length > 0;
+  const isOpen = expandedDocumentIds.includes(item.id);
 
   if (hasChildren) {
     return (
       <SidebarMenuItem>
         <Collapsible
-          className="group/collapsible"
-          open={expandedDocumentIds.includes(item.id)}
+          className={"group/collapsible"}
+          open={isOpen}
           onOpenChange={() => toggleExpanded(item.id)}
         >
           <CollapsibleTrigger asChild>
@@ -116,15 +117,13 @@ function Tree({
               {item.title.trim() ? item.title : "New Page"}
               <div className="relative flex ml-auto gap-2">
                 <ChevronRightIcon
-                  className="
-                    group-data-[state=open]/collapsible:rotate-90
-                    group-hover/item:hidden
-                    absolute
-                    right-0
-                  "
+                  className={cn(
+                    "group-hover/item:hidden absolute right-0 transition-transform",
+                    isOpen && "rotate-90",
+                  )}
                 />
                 <div className="flex gap-2 ml-auto invisible group-hover/item:visible">
-                  <DropdownMenuEllipsis />
+                  <DropdownMenuEllipsis docId={item.id} />
                   <Tooltip>
                     <TooltipTrigger className="cursor-pointer" asChild>
                       <PlusIcon
@@ -176,7 +175,7 @@ function Tree({
       <FileIcon />
       {item.title.trim() ? item.title : "New Page"}
       <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
-        <DropdownMenuEllipsis />
+        <DropdownMenuEllipsis docId={item.id} />
         <Tooltip>
           <TooltipTrigger className="cursor-pointer" asChild>
             <PlusIcon

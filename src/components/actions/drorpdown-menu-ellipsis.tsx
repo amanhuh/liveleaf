@@ -16,8 +16,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDocumentStore } from "@/stores/document-store";
 
-export function DropdownMenuEllipsis() {
+export function DropdownMenuEllipsis({ docId }: { docId: string}) {
+  const deleteDocument = useDocumentStore((state) => state.deleteDocument);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -35,7 +38,16 @@ export function DropdownMenuEllipsis() {
         <DropdownMenuSeparator />
         <DropdownMenuItem>Copy Link</DropdownMenuItem>
         <DropdownMenuSeparator  />
-        <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+        <DropdownMenuItem 
+          variant="destructive"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            deleteDocument(docId)
+          }}
+        >
+          Delete
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
