@@ -19,6 +19,7 @@ import {
   SidebarMenuSub,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { DropdownMenuEllipsis } from "./actions/drorpdown-menu-ellipsis";
 import {
   FileIcon,
   ChevronRightIcon,
@@ -119,10 +120,11 @@ function Tree({
                     group-data-[state=open]/collapsible:rotate-90
                     group-hover/item:hidden
                     absolute
+                    right-0
                   "
                 />
-                <div className="flex gap-2">
-                  <EllipsisIcon className="ml-auto hidden group-hover/item:block" />
+                <div className="flex gap-2 ml-auto invisible group-hover/item:visible">
+                  <DropdownMenuEllipsis />
                   <Tooltip>
                     <TooltipTrigger className="cursor-pointer" asChild>
                       <PlusIcon
@@ -173,21 +175,24 @@ function Tree({
     >
       <FileIcon />
       {item.title.trim() ? item.title : "New Page"}
-      <div className="flex ml-auto gap-2">
-        <EllipsisIcon className="ml-auto hidden group-hover/item:block" />
-        <PlusIcon
-          className="
-            hidden
-            group-hover/item:block
-          "
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const doc = createDocument({ parentId: item.id });
-            expandDocument(item.id);
-            router.push(`/d/${doc.id}`);
-          }}
-        />
+      <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
+        <DropdownMenuEllipsis />
+        <Tooltip>
+          <TooltipTrigger className="cursor-pointer" asChild>
+            <PlusIcon
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const doc = createDocument({ parentId: item.id });
+                expandDocument(item.id);
+                router.push(`/d/${doc.id}`);
+              }}
+            />
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>Add a page</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </SidebarMenuButton>
   );
