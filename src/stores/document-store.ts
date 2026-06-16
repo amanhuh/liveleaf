@@ -46,7 +46,7 @@ interface DocumentStore {
 
   setLastOpenedDocumentId: (id: string) => void;
 
-  createDocument: (options: CreateDocumentOptions) => Document;
+  createDocument: (options?: CreateDocumentOptions) => Document;
 
   updateDocument: (id: string, updates: Partial<Document>) => void;
 
@@ -69,7 +69,7 @@ export const useDocumentStore = create<DocumentStore>()(
         set({
           lastOpenedDocumentId: id,
         }),
-      createDocument: ({ parentId, title }: CreateDocumentOptions) => {
+      createDocument: ({ parentId, title }: CreateDocumentOptions = {}) => {
         const newDocument: Document = {
           id: crypto.randomUUID(),
           title: title ?? "Untitled",

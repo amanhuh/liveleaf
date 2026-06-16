@@ -113,34 +113,38 @@ function Tree({
             >
               <FileIcon />
               {item.title.trim() ? item.title : "New Page"}
-              <div className="flex ml-auto gap-2">
-                <EllipsisIcon className="ml-auto hidden group-hover/item:block" />
+              <div className="relative flex ml-auto gap-2">
                 <ChevronRightIcon
                   className="
                     group-data-[state=open]/collapsible:rotate-90
                     group-hover/item:hidden
+                    absolute
                   "
                 />
-                <Tooltip>
-                  <TooltipTrigger className="cursor-pointer" asChild>
-                    <PlusIcon
-                      className="
-                        hidden
-                        group-hover/item:block
+                <div className="flex gap-2">
+                  <EllipsisIcon className="ml-auto hidden group-hover/item:block" />
+                  <Tooltip>
+                    <TooltipTrigger className="cursor-pointer" asChild>
+                      <PlusIcon
+                        className="
+                        invisible
+                        group-hover/item:visible
+                        
                       "
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const doc = createDocument({ parentId: item.id });
-                        expandDocument(item.id);
-                        router.push(`/d/${doc.id}`);
-                      }}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Add a page</p>
-                  </TooltipContent>
-                </Tooltip>
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const doc = createDocument({ parentId: item.id });
+                          expandDocument(item.id);
+                          router.push(`/d/${doc.id}`);
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Add a page</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
             </SidebarMenuButton>
           </CollapsibleTrigger>
@@ -180,7 +184,7 @@ function Tree({
             e.preventDefault();
             e.stopPropagation();
             const doc = createDocument({ parentId: item.id });
-            expandDocument(item.id)
+            expandDocument(item.id);
             router.push(`/d/${doc.id}`);
           }}
         />
