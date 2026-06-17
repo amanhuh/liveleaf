@@ -5,7 +5,6 @@ import {
   SquarePen,
   Trash,
   Link,
-  EllipsisIcon,
 } from "lucide-react";
 import {
   ContextMenuContent,
@@ -39,7 +38,7 @@ export function ContextMenuEllipsis({
 
   return (
       <ContextMenuContent
-        className="w-44"
+        className="w-44 p-2"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -54,9 +53,13 @@ export function ContextMenuEllipsis({
             expandDocument(doc.id);
           }}
         >
+          <FilePlusCorner />
           Add Page
         </ContextMenuItem>
-        <ContextMenuItem onClick={onRename}>Rename</ContextMenuItem>
+        <ContextMenuItem onClick={onRename}>
+          <SquarePen />
+          Rename
+        </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem
           onClick={(e) => {
@@ -66,6 +69,7 @@ export function ContextMenuEllipsis({
             handleCopyLink();
           }}
         >
+          <Link />
           Copy Link
         </ContextMenuItem>
         <ContextMenuSeparator />
@@ -77,6 +81,7 @@ export function ContextMenuEllipsis({
             deleteDocument(documentId);
           }}
         >
+          <Trash />
           Delete
         </ContextMenuItem>
       </ContextMenuContent>
