@@ -21,7 +21,7 @@ import Link from "next/link";
 import { FileIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 import { useRouter } from "next/navigation";
-
+import { Input } from "../ui/input";
 export type TreeItemProps = {
   item: Document;
   docs: Document[];
@@ -83,16 +83,26 @@ export default function TreeItem({
               isActive={selectedDocumentId == item.id}
               className={cn(
                 "group/item data-[active=true]:bg-accent cursor-pointer",
-                renamingDocumentId == item.id && "bg-blue-600/35! border border-blue-600",
+                renamingDocumentId == item.id &&
+                  "bg-blue-600/15! border border-blue-600",
               )}
               asChild
             >
-              <Link href={`/d/${item.id}`}>
-                <FileIcon />
-                {renamingDocumentId == item.id ? (
+              {renamingDocumentId == item.id ? (
+                <div className="p-2">
+                  <FileIcon />
                   <input
                     autoFocus
-                    className="border-0 ring-0"
+                    className="
+                      bg-transparent
+                      border-none
+                      outline-none
+                      ring-0
+                      focus:outline-none
+                      focus:ring-0
+                      p-0
+                      m-0
+                    "
                     ref={inputRef}
                     onClick={(e) => {
                       e.preventDefault();
@@ -111,45 +121,47 @@ export default function TreeItem({
                       }
                     }}
                   ></input>
-                ) : (
-                  documentName
-                )}
-                <div className="relative flex ml-auto gap-2">
-                  <ChevronRightIcon
-                    className={cn(
-                      "group-hover/item:hidden absolute right-0 transition-transform",
-                      isOpen && "rotate-90",
-                    )}
-                  />
-                  <div className="flex gap-2 ml-auto invisible group-hover/item:visible">
-                    <DropdownMenuEllipsis
-                      docId={item.id}
-                      onRename={() => setRenamingDocumentId(item.id)}
-                    />
-                    <Tooltip>
-                      <TooltipTrigger className="cursor-pointer" asChild>
-                        <PlusIcon
-                          className="
-                        invisible
-                        group-hover/item:visible
-                        
-                      "
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const doc = createDocument({ parentId: item.id });
-                            expandDocument(item.id);
-                            router.push(`/d/${doc.id}`);
-                          }}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>Add a page</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
                 </div>
-              </Link>
+              ) : (
+                <Link href={`/d/${item.id}`}>
+                  <FileIcon />
+                  {documentName}
+                  <div className="relative flex ml-auto gap-2">
+                    <ChevronRightIcon
+                      className={cn(
+                        "group-hover/item:hidden absolute right-0 transition-transform",
+                        isOpen && "rotate-90",
+                      )}
+                    />
+                    <div className="flex gap-2 ml-auto invisible group-hover/item:visible">
+                      <DropdownMenuEllipsis
+                        docId={item.id}
+                        onRename={() => setRenamingDocumentId(item.id)}
+                      />
+                      <Tooltip>
+                        <TooltipTrigger className="cursor-pointer" asChild>
+                          <PlusIcon
+                            className="
+                              invisible
+                              group-hover/item:visible
+                            "
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const doc = createDocument({ parentId: item.id });
+                              expandDocument(item.id);
+                              router.push(`/d/${doc.id}`);
+                            }}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p>Add a page</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </Link>
+              )}
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -176,16 +188,26 @@ export default function TreeItem({
       isActive={selectedDocumentId == item.id}
       className={cn(
         "group/item data-[active=true]:bg-accent cursor-pointer",
-        renamingDocumentId == item.id && "bg-blue-600/15! border border-blue-600",
+        renamingDocumentId == item.id &&
+          "bg-blue-600/15! border border-blue-600",
       )}
       asChild
     >
-      <Link href={`/d/${item.id}`}>
-        <FileIcon />
-        {renamingDocumentId == item.id ? (
+      {renamingDocumentId == item.id ? (
+        <div className="p-2">
+          <FileIcon />
           <input
             autoFocus
-            className="border-0 ring-0"
+            className="
+              bg-transparent
+              border-none
+              outline-none
+              ring-0
+              focus:outline-none
+              focus:ring-0
+              p-0
+              m-0
+            "
             ref={inputRef}
             onClick={(e) => {
               e.preventDefault();
@@ -204,32 +226,35 @@ export default function TreeItem({
               }
             }}
           ></input>
-        ) : (
-          documentName
-        )}
-        <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
-          <DropdownMenuEllipsis
-            docId={item.id}
-            onRename={() => setRenamingDocumentId(item.id)}
-          />
-          <Tooltip>
-            <TooltipTrigger className="cursor-pointer" asChild>
-              <PlusIcon
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const doc = createDocument({ parentId: item.id });
-                  expandDocument(item.id);
-                  router.push(`/d/${doc.id}`);
-                }}
-              />
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>Add a page</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
-      </Link>
+      ) : (
+        <Link href={`/d/${item.id}`}>
+          <FileIcon />
+          {documentName}
+          <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
+            <DropdownMenuEllipsis
+              docId={item.id}
+              onRename={() => setRenamingDocumentId(item.id)}
+            />
+            <Tooltip>
+              <TooltipTrigger className="cursor-pointer" asChild>
+                <PlusIcon
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const doc = createDocument({ parentId: item.id });
+                    expandDocument(item.id);
+                    router.push(`/d/${doc.id}`);
+                  }}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Add a page</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </Link>
+      )}
     </SidebarMenuButton>
   );
 }
