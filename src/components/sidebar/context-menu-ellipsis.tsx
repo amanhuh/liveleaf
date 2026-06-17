@@ -8,17 +8,16 @@ import {
   EllipsisIcon,
 } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator
+} from "@/components/ui/context-menu"
 import { toast } from "sonner";
 import { useDocumentStore } from "@/stores/document-store";
 import { useRouter } from "next/navigation";
 
-export function DropdownMenuEllipsis({
+
+export function ContextMenuEllipsis({
   documentId,
   onRename,
 }: {
@@ -39,24 +38,14 @@ export function DropdownMenuEllipsis({
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        asChild
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        <EllipsisIcon />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
+      <ContextMenuContent
         className="w-44"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
         }}
       >
-        <DropdownMenuItem
+        <ContextMenuItem
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -66,10 +55,10 @@ export function DropdownMenuEllipsis({
           }}
         >
           Add Page
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onRename}>Rename</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
+        </ContextMenuItem>
+        <ContextMenuItem onClick={onRename}>Rename</ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
@@ -78,9 +67,9 @@ export function DropdownMenuEllipsis({
           }}
         >
           Copy Link
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem
           variant="destructive"
           onClick={(e) => {
             e.preventDefault();
@@ -89,8 +78,7 @@ export function DropdownMenuEllipsis({
           }}
         >
           Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </ContextMenuItem>
+      </ContextMenuContent>
   );
 }
