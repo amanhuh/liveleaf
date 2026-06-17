@@ -19,7 +19,7 @@ import {
 import { useDocumentStore } from "@/stores/document-store";
 import { useRouter } from "next/navigation";
 
-export function DropdownMenuEllipsis({ docId }: { docId: string}) {
+export function DropdownMenuEllipsis({ docId, onRename }: { docId: string, onRename: () => void; }) {
   const deleteDocument = useDocumentStore((state) => state.deleteDocument);
   const createDocument = useDocumentStore((state) => state.createDocument);
   const expandDocument = useDocumentStore((state) => state.expandDocument);
@@ -55,7 +55,11 @@ export function DropdownMenuEllipsis({ docId }: { docId: string}) {
         >
           Add Page
         </DropdownMenuItem>
-        <DropdownMenuItem>Rename</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={onRename}
+        >
+          Rename
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>Copy Link</DropdownMenuItem>
         <DropdownMenuSeparator  />

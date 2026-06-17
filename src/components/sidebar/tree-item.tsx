@@ -1,100 +1,74 @@
-"use client";
-
-import * as React from "react";
-import { Document as Doc } from "@/types/document.types";
+import { useState, useEffect, useRef } from "react";
+import type { Document } from "@/types/document.types";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-  SidebarRail,
 } from "@/components/ui/sidebar";
-import { DropdownMenuEllipsis } from "./actions/drorpdown-menu-ellipsis";
-import { FileIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
-import { useDocumentStore } from "@/stores/document-store";
-import { useParams, useRouter } from "next/navigation";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { DropdownMenuEllipsis } from "./drorpdown-menu-ellipsis";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { FileIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
+import { useDocumentStore } from "@/stores/document-store";
+import { useRouter } from "next/navigation";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const params = useParams<{
-    documentId: string;
-  }>();
-  const selectedDocumentId = params.documentId;
-  const router = useRouter();
-  const documents = useDocumentStore((state) => state.documents);
-  const rootDocs = documents.filter((doc) => doc.parentId === null);
-  const createDocument = useDocumentStore((state) => state.createDocument);
-  return (
-    <Sidebar {...props}>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>
-            <span>Documents</span>
-            <PlusIcon
-              className="ml-auto cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const doc = createDocument();
-                router.push(`/d/${doc.id}`);
-              }}
-            />
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {rootDocs.map((doc) => (
-                <Tree
-                  key={doc.id}
-                  selectedDocumentId={selectedDocumentId}
-                  item={doc}
-                  docs={documents}
-                />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarRail />
-    </Sidebar>
-  );
-}
+export type TreeItemProps = {
+  item: Document;
+  docs: Document[];
+  selectedDocumentId: string;
+  renamingDocumentId: string | null;
+  setRenamingDocumentId: React.Dispatch<React.SetStateAction<string | null>>;
+};
 
-function Tree({
+export default function TreeItem({
   selectedDocumentId,
   item,
   docs,
-}: {
-  selectedDocumentId: string;
-  item: Doc;
-  docs: Doc[];
-}) {
+  renamingDocumentId,
+  setRenamingDocumentId,
+}: TreeItemProps) {
   const router = useRouter();
-
   const expandedDocumentIds = useDocumentStore(
     (state) => state.expandedDocumentIds,
   );
   const toggleExpanded = useDocumentStore((state) => state.toggleExpanded);
   const createDocument = useDocumentStore((state) => state.createDocument);
   const expandDocument = useDocumentStore((state) => state.expandDocument);
+  const updateDocument = useDocumentStore((state) => state.updateDocument);
   const children = docs.filter((doc) => doc.parentId === item.id);
   const hasChildren = children.length > 0;
   const isOpen = expandedDocumentIds.includes(item.id);
+  const documentName = item.title.trim() ? item.title : "New Page";
+  const [draftTitle, setDraftTitle] = useState(documentName);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (renamingDocumentId === item.id) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [renamingDocumentId, item.id]);
+
+  const handleSave = () => {
+    updateDocument(item.id, {
+      title: draftTitle.trim() || "Untitled",
+    });
+
+    setRenamingDocumentId(null);
+  };
+  const handleCancel = () => {
+    setDraftTitle(item.title);
+    setRenamingDocumentId(null);
+  };
 
   if (hasChildren) {
     return (
@@ -107,12 +81,39 @@ function Tree({
           <CollapsibleTrigger asChild>
             <SidebarMenuButton
               isActive={selectedDocumentId == item.id}
-              className="group/item data-[active=true]:bg-accent cursor-pointer"
+              className={cn(
+                "group/item data-[active=true]:bg-accent cursor-pointer",
+                renamingDocumentId == item.id && "bg-blue-600/35! border border-blue-600",
+              )}
               asChild
             >
               <Link href={`/d/${item.id}`}>
                 <FileIcon />
-                {item.title.trim() ? item.title : "New Page"}
+                {renamingDocumentId == item.id ? (
+                  <input
+                    autoFocus
+                    className="border-0 ring-0"
+                    ref={inputRef}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    value={draftTitle}
+                    onChange={(e) => {
+                      setDraftTitle(e.target.value);
+                    }}
+                    onBlur={handleSave}
+                    onKeyDown={(e) => {
+                      if (e.key == "Enter") {
+                        handleSave();
+                      } else if (e.key == "Escape") {
+                        handleCancel();
+                      }
+                    }}
+                  ></input>
+                ) : (
+                  documentName
+                )}
                 <div className="relative flex ml-auto gap-2">
                   <ChevronRightIcon
                     className={cn(
@@ -121,7 +122,10 @@ function Tree({
                     )}
                   />
                   <div className="flex gap-2 ml-auto invisible group-hover/item:visible">
-                    <DropdownMenuEllipsis docId={item.id} />
+                    <DropdownMenuEllipsis
+                      docId={item.id}
+                      onRename={() => setRenamingDocumentId(item.id)}
+                    />
                     <Tooltip>
                       <TooltipTrigger className="cursor-pointer" asChild>
                         <PlusIcon
@@ -151,11 +155,13 @@ function Tree({
           <CollapsibleContent>
             <SidebarMenuSub>
               {children.map((child) => (
-                <Tree
+                <TreeItem
                   key={child.id}
                   selectedDocumentId={selectedDocumentId}
                   item={child}
                   docs={docs}
+                  renamingDocumentId={renamingDocumentId}
+                  setRenamingDocumentId={setRenamingDocumentId}
                 />
               ))}
             </SidebarMenuSub>
@@ -168,14 +174,44 @@ function Tree({
   return (
     <SidebarMenuButton
       isActive={selectedDocumentId == item.id}
-      className="group/item data-[active=true]:bg-accent cursor-pointer"
+      className={cn(
+        "group/item data-[active=true]:bg-accent cursor-pointer",
+        renamingDocumentId == item.id && "bg-blue-600/15! border border-blue-600",
+      )}
       asChild
     >
       <Link href={`/d/${item.id}`}>
         <FileIcon />
-        {item.title.trim() ? item.title : "New Page"}
+        {renamingDocumentId == item.id ? (
+          <input
+            autoFocus
+            className="border-0 ring-0"
+            ref={inputRef}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            value={draftTitle}
+            onChange={(e) => {
+              setDraftTitle(e.target.value);
+            }}
+            onBlur={handleSave}
+            onKeyDown={(e) => {
+              if (e.key == "Enter") {
+                handleSave();
+              } else if (e.key == "Escape") {
+                handleCancel();
+              }
+            }}
+          ></input>
+        ) : (
+          documentName
+        )}
         <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
-          <DropdownMenuEllipsis docId={item.id} />
+          <DropdownMenuEllipsis
+            docId={item.id}
+            onRename={() => setRenamingDocumentId(item.id)}
+          />
           <Tooltip>
             <TooltipTrigger className="cursor-pointer" asChild>
               <PlusIcon
