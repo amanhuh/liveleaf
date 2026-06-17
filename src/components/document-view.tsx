@@ -16,6 +16,7 @@ import { useDocumentStore } from "@/stores/document-store";
 import { Document } from "@/types/document.types";
 import { useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 
 export default function DocumentView() {
   const params = useParams<{
@@ -23,9 +24,6 @@ export default function DocumentView() {
   }>();
   const selectedDocumentId = params.documentId;
   const documents = useDocumentStore((state) => state.documents);
-  // const selectedDocumentId = useDocumentStore(
-  //   (state) => state.selectedDocumentId,
-  // );
   const updateDocument = useDocumentStore((state) => state.updateDocument);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const selectedDocument = documents.find(
@@ -67,9 +65,11 @@ export default function DocumentView() {
                   ) : (
                     <BreadcrumbLink
                       onClick={() => setLastOpenedDocumentId(doc.id)}
-                      href="#"
+                      asChild
                     >
-                      {doc.title.trim() ? doc.title : "New Page"}
+                      <Link href={`/d/${doc.id}`}>
+                        {doc.title.trim() ? doc.title : "New Page"}
+                      </Link>
                     </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>
