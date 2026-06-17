@@ -50,7 +50,7 @@ export function DropdownMenuEllipsis({
         <EllipsisIcon />
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-44"
+        className="w-44 p-2"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -65,9 +65,13 @@ export function DropdownMenuEllipsis({
             expandDocument(doc.id);
           }}
         >
+          <FilePlusCorner />
           Add Page
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onRename}>Rename</DropdownMenuItem>
+        <DropdownMenuItem onClick={onRename}>
+          <SquarePen />
+          Rename
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={(e) => {
@@ -77,6 +81,7 @@ export function DropdownMenuEllipsis({
             handleCopyLink();
           }}
         >
+          <Link />
           Copy Link
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -88,6 +93,7 @@ export function DropdownMenuEllipsis({
             deleteDocument(documentId);
           }}
         >
+          <Trash />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
