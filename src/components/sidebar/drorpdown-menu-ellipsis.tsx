@@ -11,20 +11,33 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { useDocumentStore } from "@/stores/document-store";
 import { useRouter } from "next/navigation";
 
-export function DropdownMenuEllipsis({ docId, onRename }: { docId: string, onRename: () => void; }) {
+export function DropdownMenuEllipsis({
+  documentId,
+  onRename,
+}: {
+  documentId: string;
+  onRename: () => void;
+}) {
   const deleteDocument = useDocumentStore((state) => state.deleteDocument);
   const createDocument = useDocumentStore((state) => state.createDocument);
   const expandDocument = useDocumentStore((state) => state.expandDocument);
 
   const router = useRouter();
+
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(
+      `${window.location.origin}/d/${documentId}`
+    );
+    toast("Copied page link to clipboard", { position: "bottom-right" })
+  };
 
   return (
     <DropdownMenu>
@@ -37,38 +50,43 @@ export function DropdownMenuEllipsis({ docId, onRename }: { docId: string, onRen
       >
         <EllipsisIcon />
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
+      <DropdownMenuContent
         className="w-44"
         onClick={(e) => {
           e.preventDefault();
-          e.stopPropagation();   
+          e.stopPropagation();
         }}
       >
         <DropdownMenuItem
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            const doc = createDocument({ parentId: docId });
+            const doc = createDocument({ parentId: documentId });
             router.push(`/d/${doc.id}`);
             expandDocument(doc.id);
           }}
         >
           Add Page
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={onRename}>Rename</DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={onRename}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+
+            handleCopyLink();
+          }}
         >
-          Rename
+          Copy Link
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Copy Link</DropdownMenuItem>
-        <DropdownMenuSeparator  />
-        <DropdownMenuItem 
+        <DropdownMenuItem
           variant="destructive"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            deleteDocument(docId)
+            deleteDocument(documentId);
           }}
         >
           Delete
