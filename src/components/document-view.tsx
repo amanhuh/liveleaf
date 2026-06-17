@@ -37,6 +37,9 @@ export default function DocumentView() {
     : [];
 
   useEffect(() => {
+    console.timeEnd("nav");
+  }, [selectedDocumentId]);
+  useEffect(() => {
     const textarea = textareaRef.current;
 
     if (!textarea) return;

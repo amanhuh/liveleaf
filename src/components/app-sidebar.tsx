@@ -20,11 +20,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { DropdownMenuEllipsis } from "./actions/drorpdown-menu-ellipsis";
-import {
-  FileIcon,
-  ChevronRightIcon,
-  PlusIcon,
-} from "lucide-react";
+import { FileIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -33,6 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams<{
@@ -110,43 +107,45 @@ function Tree({
           <CollapsibleTrigger asChild>
             <SidebarMenuButton
               isActive={selectedDocumentId == item.id}
-              onClick={() => router.push(`/d/${item.id}`)}
               className="group/item data-[active=true]:bg-accent cursor-pointer"
+              asChild
             >
-              <FileIcon />
-              {item.title.trim() ? item.title : "New Page"}
-              <div className="relative flex ml-auto gap-2">
-                <ChevronRightIcon
-                  className={cn(
-                    "group-hover/item:hidden absolute right-0 transition-transform",
-                    isOpen && "rotate-90",
-                  )}
-                />
-                <div className="flex gap-2 ml-auto invisible group-hover/item:visible">
-                  <DropdownMenuEllipsis docId={item.id} />
-                  <Tooltip>
-                    <TooltipTrigger className="cursor-pointer" asChild>
-                      <PlusIcon
-                        className="
+              <Link href={`/d/${item.id}`}>
+                <FileIcon />
+                {item.title.trim() ? item.title : "New Page"}
+                <div className="relative flex ml-auto gap-2">
+                  <ChevronRightIcon
+                    className={cn(
+                      "group-hover/item:hidden absolute right-0 transition-transform",
+                      isOpen && "rotate-90",
+                    )}
+                  />
+                  <div className="flex gap-2 ml-auto invisible group-hover/item:visible">
+                    <DropdownMenuEllipsis docId={item.id} />
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-pointer" asChild>
+                        <PlusIcon
+                          className="
                         invisible
                         group-hover/item:visible
                         
                       "
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const doc = createDocument({ parentId: item.id });
-                          expandDocument(item.id);
-                          router.push(`/d/${doc.id}`);
-                        }}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>Add a page</p>
-                    </TooltipContent>
-                  </Tooltip>
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const doc = createDocument({ parentId: item.id });
+                            expandDocument(item.id);
+                            router.push(`/d/${doc.id}`);
+                          }}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Add a page</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -169,30 +168,32 @@ function Tree({
   return (
     <SidebarMenuButton
       isActive={selectedDocumentId == item.id}
-      onClick={() => router.push(`/d/${item.id}`)}
       className="group/item data-[active=true]:bg-accent cursor-pointer"
+      asChild
     >
-      <FileIcon />
-      {item.title.trim() ? item.title : "New Page"}
-      <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
-        <DropdownMenuEllipsis docId={item.id} />
-        <Tooltip>
-          <TooltipTrigger className="cursor-pointer" asChild>
-            <PlusIcon
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const doc = createDocument({ parentId: item.id });
-                expandDocument(item.id);
-                router.push(`/d/${doc.id}`);
-              }}
-            />
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>Add a page</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      <Link href={`/d/${item.id}`}>
+        <FileIcon />
+        {item.title.trim() ? item.title : "New Page"}
+        <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
+          <DropdownMenuEllipsis docId={item.id} />
+          <Tooltip>
+            <TooltipTrigger className="cursor-pointer" asChild>
+              <PlusIcon
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const doc = createDocument({ parentId: item.id });
+                  expandDocument(item.id);
+                  router.push(`/d/${doc.id}`);
+                }}
+              />
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Add a page</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </Link>
     </SidebarMenuButton>
   );
 }
