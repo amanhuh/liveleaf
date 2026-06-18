@@ -55,8 +55,10 @@ export default function TreeItem({
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (renamingDocumentId === item.id) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      });
     }
   }, [renamingDocumentId, item.id]);
 
@@ -98,15 +100,15 @@ export default function TreeItem({
                       <input
                         autoFocus
                         className="
-                      bg-transparent
-                      border-none
-                      outline-none
-                      ring-0
-                      focus:outline-none
-                      focus:ring-0
-                      p-0
-                      m-0
-                    "
+                          bg-transparent
+                          border-none
+                          outline-none
+                          ring-0
+                          focus:outline-none
+                          focus:ring-0
+                          p-0
+                          m-0
+                        "
                         ref={inputRef}
                         onClick={(e) => {
                           e.preventDefault();
@@ -146,9 +148,9 @@ export default function TreeItem({
                             <TooltipTrigger className="cursor-pointer" asChild>
                               <PlusIcon
                                 className="
-                              invisible
-                              group-hover/item:visible
-                            "
+                                  invisible
+                                  group-hover/item:visible
+                                "
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
@@ -172,7 +174,7 @@ export default function TreeItem({
               </ContextMenuTrigger>
             </CollapsibleTrigger>
             <ContextMenuEllipsis
-              documentId={item.id}
+              document={item}
               onRename={() => setRenamingDocumentId(item.id)}
             />
             <CollapsibleContent>
@@ -213,15 +215,15 @@ export default function TreeItem({
               <input
                 autoFocus
                 className="
-              bg-transparent
-              border-none
-              outline-none
-              ring-0
-              focus:outline-none
-              focus:ring-0
-              p-0
-              m-0
-            "
+                  bg-transparent
+                  border-none
+                  outline-none
+                  ring-0
+                  focus:outline-none
+                  focus:ring-0
+                  p-0
+                  m-0
+                "
                 ref={inputRef}
                 onClick={(e) => {
                   e.preventDefault();
@@ -272,7 +274,7 @@ export default function TreeItem({
         </SidebarMenuButton>
       </ContextMenuTrigger>
       <ContextMenuEllipsis
-        documentId={item.id}
+        document={item}
         onRename={() => setRenamingDocumentId(item.id)}
       />
     </ContextMenu>

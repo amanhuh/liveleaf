@@ -59,9 +59,12 @@ function getDescendantIds(
 interface DocumentStore {
   documents: Document[];
   lastOpenedDocumentId: string | null;
+  currentDocumentId: string | null;
   expandedDocumentIds: string[];
 
   setLastOpenedDocumentId: (id: string) => void;
+
+  setCurrentDocumentId: (id: string) => void;
 
   createDocument: (options?: CreateDocumentOptions) => Document;
 
@@ -81,10 +84,15 @@ export const useDocumentStore = create<DocumentStore>()(
     (set) => ({
       documents: mockDocuments,
       lastOpenedDocumentId: null,
+      currentDocumentId: null,
       expandedDocumentIds: [],
       setLastOpenedDocumentId: (id) =>
         set({
           lastOpenedDocumentId: id,
+        }),
+      setCurrentDocumentId: (id) => 
+        set({
+          currentDocumentId: id,
         }),
       createDocument: ({ parentId, title }: CreateDocumentOptions = {}) => {
         const newDocument: Document = {
@@ -140,6 +148,7 @@ export const useDocumentStore = create<DocumentStore>()(
       partialize: (state) => ({
         documents: state.documents,
         lastOpenedDocumentId: state.lastOpenedDocumentId,
+        currentDocumentId: state.currentDocumentId,
         expandedDocumentIds: state.expandedDocumentIds,
       }),
     },

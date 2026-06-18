@@ -29,9 +29,7 @@ export default function DocumentView() {
   const selectedDocument = documents.find(
     (doc) => doc.id === selectedDocumentId,
   );
-  const setLastOpenedDocumentId = useDocumentStore(
-    (state) => state.setLastOpenedDocumentId,
-  );
+
   const breadcrumb = selectedDocumentId
     ? getBreadCrumbs(documents, selectedDocumentId)
     : [];
@@ -67,7 +65,6 @@ export default function DocumentView() {
                     </BreadcrumbPage>
                   ) : (
                     <BreadcrumbLink
-                      onClick={() => setLastOpenedDocumentId(doc.id)}
                       asChild
                     >
                       <Link href={`/d/${doc.id}`}>
