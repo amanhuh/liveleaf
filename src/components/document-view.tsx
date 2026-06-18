@@ -30,13 +30,10 @@ export default function DocumentView() {
     (doc) => doc.id === selectedDocumentId,
   );
 
-  const breadcrumb = selectedDocumentId
+  const breadcrumb = selectedDocument
     ? getBreadCrumbs(documents, selectedDocumentId)
     : [];
 
-  useEffect(() => {
-    console.timeEnd("nav");
-  }, [selectedDocumentId]);
   useEffect(() => {
     const textarea = textareaRef.current;
 

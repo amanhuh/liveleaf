@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/context-menu";
 import { toast } from "sonner";
 import { useDocumentStore } from "@/stores/document-store";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export function ContextMenuEllipsis({
   document,
@@ -18,14 +18,20 @@ export function ContextMenuEllipsis({
   document: Document;
   onRename: () => void;
 }) {
+  const router = useRouter();
+  const params = useParams<{
+    documentId: string;
+  }>();
+  const selectedDocumentId = params.documentId;
+
   const deleteDocument = useDocumentStore((state) => state.deleteDocument);
   const createDocument = useDocumentStore((state) => state.createDocument);
   const expandDocument = useDocumentStore((state) => state.expandDocument);
   const documents = useDocumentStore((state) => state.documents);
   const rootDocs = documents.filter((doc) => doc.parentId === null);
-  const redirectDocumentId =
+  const isCurrentDocument = selectedDocumentId === document.id;
+  const fallbackDocumentId =
     document.parentId ?? rootDocs.find((doc) => doc.id !== document.id)?.id;
-  const router = useRouter();
 
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(
@@ -34,11 +40,20 @@ export function ContextMenuEllipsis({
     toast("Copied page link to clipboard", { position: "bottom-right" });
   };
 
-  const handleDelete = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDelete = () => {
     deleteDocument(document.id);
-    router.push(`/d/${redirectDocumentId}`);
+
+    if (!isCurrentDocument) {
+      return;
+    }
+
+    if (!fallbackDocumentId) {
+      const doc = createDocument();
+      router.push(`/d/${doc.id}`);
+      return;
+    }
+
+    router.push(`/d/${fallbackDocumentId}`);
   };
 
   return (
@@ -81,7 +96,9 @@ export function ContextMenuEllipsis({
       <ContextMenuItem
         variant="destructive"
         onClick={(e) => {
-          handleDelete(e);
+          e.preventDefault();
+          e.stopPropagation();
+          handleDelete();
         }}
       >
         <Trash />

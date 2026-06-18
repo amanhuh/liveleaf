@@ -141,7 +141,7 @@ export default function TreeItem({
                         />
                         <div className="flex gap-2 ml-auto invisible group-hover/item:visible">
                           <DropdownMenuEllipsis
-                            documentId={item.id}
+                            document={item}
                             onRename={() => setRenamingDocumentId(item.id)}
                           />
                           <Tooltip>
@@ -249,7 +249,7 @@ export default function TreeItem({
               {documentName}
               <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
                 <DropdownMenuEllipsis
-                  documentId={item.id}
+                  document={item}
                   onRename={() => setRenamingDocumentId(item.id)}
                 />
                 <Tooltip>
