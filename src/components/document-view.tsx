@@ -19,6 +19,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 
 export default function DocumentView() {
+  console.log('document view render')
   const params = useParams<{
     documentId: string;
   }>();
@@ -26,6 +27,7 @@ export default function DocumentView() {
   const documents = useDocumentStore((state) => state.documents);
   const updateDocument = useDocumentStore((state) => state.updateDocument);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
   const selectedDocument = documents.find(
     (doc) => doc.id === selectedDocumentId,
   );
@@ -93,6 +95,7 @@ export default function DocumentView() {
         />
         <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min text-lg ">
           <Tiptap
+            document={selectedDocument}
             content={selectedDocument?.content ?? ""}
             onChange={(content) =>
               selectedDocument?.id &&
