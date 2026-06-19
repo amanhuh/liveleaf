@@ -94,16 +94,12 @@ export default function DocumentView() {
           }}
         />
         <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min text-lg ">
-          <Tiptap
-            document={selectedDocument}
-            content={selectedDocument?.content ?? ""}
-            onChange={(content) =>
-              selectedDocument?.id &&
-              updateDocument(selectedDocument.id, {
-                content,
-              })
-            }
-          />
+          {selectedDocument ? (
+            <Tiptap
+              document={selectedDocument}
+              content={selectedDocument.content ?? ""}
+            />
+          ) : null}
         </div>
       </div>
     </SidebarInset>
