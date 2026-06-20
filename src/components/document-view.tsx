@@ -1,6 +1,6 @@
 "use client";
 
-import Tiptap from "@/components/editor";
+import Tiptap from "@/components/editor/editor";
 import {
   Breadcrumb,
   BreadcrumbItem,

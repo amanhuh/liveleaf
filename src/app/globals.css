@@ -129,3 +129,10 @@
     @apply font-sans;
   }
 }
+
+.prose code::before,
+.prose code::after,
+.prose blockquote p:first-of-type::before,
+.prose blockquote p:last-of-type::after {
+  content: none;
+}

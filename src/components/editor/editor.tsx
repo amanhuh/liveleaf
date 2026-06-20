@@ -5,13 +5,13 @@ import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
-import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
-import { Bold, Italic, UnderlineIcon } from "lucide-react";
+import { Bold, Italic, UnderlineIcon, Code, Highlighter } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 import { useMemo, useState, useEffect } from "react";
 import type { Document } from "@/types/document.types";
 import debounce from "lodash/debounce";
+import { SlashCommand } from "@/components/editor/extensions/slash-command"
 
 type TiptapProps = {
   document: Document;
@@ -20,7 +20,7 @@ type TiptapProps = {
 
 export default function Tiptap({ document, content }: TiptapProps) {
   const [, forceUpdate] = useState({});
-  
+
   const updateDocument = useDocumentStore((state) => state.updateDocument);
 
   const debouncedSave = useMemo(
@@ -35,13 +35,13 @@ export default function Tiptap({ document, content }: TiptapProps) {
     immediatelyRender: false,
     extensions: [
       StarterKit,
+      SlashCommand,
       Placeholder.configure({
         placeholder: "Type '/' for commands...",
         emptyEditorClass:
           "before:content-[attr(data-placeholder)] before:float-left before:text-muted-foreground before:h-0 before:pointer-events-none opacity-60",
       }),
       Typography,
-      Underline,
       Highlight,
     ],
     content,
@@ -110,6 +110,30 @@ export default function Tiptap({ document, content }: TiptapProps) {
               }
             >
               <UnderlineIcon className="h-4 w-4" />
+            </button>
+
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => editor.chain().focus().toggleCode().run()}
+              className={
+                editor.isActive("code")
+                  ? "bg-accent p-1 rounded"
+                  : "p-1 rounded"
+              }
+            >
+              <Code className="h-4 w-4" />
+            </button>
+
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => editor.chain().focus().toggleHighlight().run()}
+              className={
+                editor.isActive("highlight")
+                  ? "bg-accent p-1 rounded"
+                  : "p-1 rounded"
+              }
+            >
+              <Highlighter className="h-4 w-4" />
             </button>
           </div>
         </BubbleMenu>

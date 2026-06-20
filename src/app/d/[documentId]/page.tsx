@@ -4,7 +4,9 @@ import DocumentView from "@/components/document-view";
 
 export default async function Page({
   params
-}: PageProps<'/d/[documentId]'>) {
+}: {
+  params: { documentId: string }
+}) {
 
   return (
     <SidebarProvider>
