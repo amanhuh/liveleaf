@@ -15,11 +15,12 @@ import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useDocumentStore } from "@/stores/document-store";
 import { Document } from "@/types/document.types";
 import { useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
 export default function DocumentView() {
-  console.log('document view render')
+  const router = useRouter();
   const params = useParams<{
     documentId: string;
   }>();
@@ -27,7 +28,7 @@ export default function DocumentView() {
   const documents = useDocumentStore((state) => state.documents);
   const updateDocument = useDocumentStore((state) => state.updateDocument);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   const selectedDocument = documents.find(
     (doc) => doc.id === selectedDocumentId,
   );
@@ -37,6 +38,16 @@ export default function DocumentView() {
     : [];
 
   useEffect(() => {
+    if (selectedDocument) return;
+
+    if (documents.length > 0) {
+      router.replace(`/d/${documents[0].id}`);
+    } else {
+      router.replace("/");
+    }
+  }, [selectedDocument, documents, router]);
+
+  useEffect(() => {
     const textarea = textareaRef.current;
 
     if (!textarea) return;
@@ -44,6 +55,10 @@ export default function DocumentView() {
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [selectedDocument?.title]);
+
+  if (!selectedDocument) {
+    return null;
+  }
 
   return (
     <SidebarInset>
@@ -63,9 +78,7 @@ export default function DocumentView() {
                       {doc.title.trim() ? doc.title : "New Page"}
                     </BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink
-                      asChild
-                    >
+                    <BreadcrumbLink asChild>
                       <Link href={`/d/${doc.id}`}>
                         {doc.title.trim() ? doc.title : "New Page"}
                       </Link>

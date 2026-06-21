@@ -7,7 +7,6 @@ export default async function Page({
 }: {
   params: { documentId: string }
 }) {
-
   return (
     <SidebarProvider>
       <AppSidebar />

@@ -14,10 +14,17 @@ export const SlashCommand = Extension.create({
       suggestion: {
         char: "/",
 
-        items: ({ query }: { query: string }) => {
-          return slashCommands.filter((item) =>
-            item.title.toLowerCase().includes(query.toLowerCase()),
-          );
+        items: ({ query }) => {
+          return slashCommands.filter((item) => {
+            const search = query.toLowerCase();
+
+            return (
+              item.title.toLowerCase().includes(search) ||
+              item.searchTerms.some((term) =>
+                term.toLowerCase().includes(search),
+              )
+            );
+          });
         },
 
         render() {

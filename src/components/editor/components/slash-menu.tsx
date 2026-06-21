@@ -35,7 +35,18 @@ export function SlashMenu(props: any) {
                 });
               }}
             >
-              {item.title}
+              <div className="flex w-full">
+                <div className="mr-3">
+                  <item.icon className="h-4 w-4" />
+                </div>
+
+                <div>
+                  <span className="text-sm font-medium">{item.title}</span>
+                </div>
+                <div className="ml-auto">
+                  <span className="text-sm text-muted-foreground">{item.shortcut}</span>
+                </div>
+              </div>
             </CommandItem>
           ))}
         </CommandGroup>

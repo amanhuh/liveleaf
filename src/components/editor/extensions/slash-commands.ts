@@ -8,46 +8,88 @@ import {
 } from "lucide-react";
 import type { Editor } from "@tiptap/core";
 
+type CommandProps = {
+  editor: Editor;
+  range: {
+    from: number;
+    to: number;
+  };
+};
+
 export const slashCommands = [
   {
     title: "Heading 1",
     icon: Heading1,
-    command: ({ editor, range } : { editor: Editor, range: { from: number, to: number }}) =>
-      editor.chain().focus().deleteRange(range).toggleHeading({ level: 1 }).run(),
+    description: "Large section heading",
+    searchTerms: ["h1", "heading", "title"],
+    shortcut: "#",
+
+    command: ({ editor, range }: CommandProps) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .toggleHeading({ level: 1 })
+        .run(),
   },
 
   {
     title: "Heading 2",
     icon: Heading2,
-    command: ({ editor, range } : { editor: Editor, range: { from: number, to: number }}) =>
-      editor.chain().focus().deleteRange(range).toggleHeading({ level: 2 }).run(),
+    description: "Medium section heading",
+    searchTerms: ["h2", "heading", "subtitle"],
+    shortcut: "##",
+
+    command: ({ editor, range }: CommandProps) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .toggleHeading({ level: 2 })
+        .run(),
   },
 
   {
     title: "Bullet List",
     icon: List,
-    command: ({ editor, range } : { editor: Editor, range: { from: number, to: number }}) =>
+    description: "Create a bulleted list",
+    searchTerms: ["bullet", "list", "unordered"],
+    shortcut: "-",
+
+    command: ({ editor, range }: CommandProps) =>
       editor.chain().focus().deleteRange(range).toggleBulletList().run(),
   },
 
   {
     title: "Numbered List",
     icon: ListOrdered,
-    command: ({ editor, range } : { editor: Editor, range: { from: number, to: number }}) =>
+    description: "Create a numbered list",
+    searchTerms: ["number", "ordered", "list"],
+    shortcut: "1.",
+
+    command: ({ editor, range }: CommandProps) =>
       editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
   },
 
   {
     title: "Quote",
     icon: Quote,
-    command: ({ editor, range } : { editor: Editor, range: { from: number, to: number }}) =>
+    description: "Capture a quote or citation",
+    searchTerms: ["quote", "blockquote", "citation"],
+    shortcut: ">",
+
+    command: ({ editor, range }: CommandProps) =>
       editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
   },
 
   {
     title: "Code Block",
     icon: Code2,
-    command: ({ editor, range } : { editor: Editor, range: { from: number, to: number }}) =>
+    description: "Write and format code",
+    searchTerms: ["code", "snippet", "programming"],
+    shortcut: "```",
+
+    command: ({ editor, range }: CommandProps) =>
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
   },
 ];
