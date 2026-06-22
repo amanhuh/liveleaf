@@ -5,6 +5,7 @@ import {
   ListOrdered,
   Quote,
   Code2,
+  Minus,
 } from "lucide-react";
 import type { Editor } from "@tiptap/core";
 
@@ -91,5 +92,16 @@ export const slashCommands = [
 
     command: ({ editor, range }: CommandProps) =>
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
+  },
+
+  {
+    title: "Divider",
+    icon: Minus,
+    description: "Insert a horizontal divider",
+    searchTerms: ["divider", "rule", "horizontal"],
+    shortcut: "---",
+
+    command: ({ editor, range }: CommandProps) =>
+      editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
   },
 ];

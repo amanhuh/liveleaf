@@ -11,7 +11,7 @@ import { useDocumentStore } from "@/stores/document-store";
 import { useMemo, useState, useEffect } from "react";
 import type { Document } from "@/types/document.types";
 import debounce from "lodash/debounce";
-import { SlashCommand } from "@/components/editor/extensions/slash-command"
+import { SlashCommand } from "@/components/editor/extensions/slash-command";
 
 type TiptapProps = {
   document: Document;
@@ -19,7 +19,7 @@ type TiptapProps = {
 };
 
 export default function Tiptap({ document, content }: TiptapProps) {
-  const [, forceUpdate] = useState({});
+  // const [, forceUpdate] = useState({});
 
   const updateDocument = useDocumentStore((state) => state.updateDocument);
 
@@ -50,30 +50,36 @@ export default function Tiptap({ document, content }: TiptapProps) {
         class:
           "min-h-screen focus:outline-none prose prose-neutral dark:prose-invert max-w-none",
       },
-    },
+      handleKeyDown(view, event) {
+        if (event.key === "Backspace") {
+          console.log("BACKSPACE");
+          console.log({
+            from: view.state.selection.from,
+            to: view.state.selection.to,
+            parent: view.state.selection.$from.parent.type.name,
+            parentOffset: view.state.selection.$from.parentOffset,
+          });
+        }
 
-    onUpdate: ({ editor }) => {
-      debouncedSave(editor.getHTML());
+        return false;
+      },
     },
   });
 
   useEffect(() => {
-    if (!editor) return;
-
-    const update = () => forceUpdate({});
-
-    editor.on("selectionUpdate", update);
-    editor.on("transaction", update);
-
-    return () => {
-      editor.off("selectionUpdate", update);
-      editor.off("transaction", update);
-    };
+    // if (!editor) return;
+    // const update = () => forceUpdate({});
+    // editor.on("selectionUpdate", update);
+    // editor.on("transaction", update);
+    // return () => {
+    //   editor.off("selectionUpdate", update);
+    //   editor.off("transaction", update);
+    // };
   }, [editor]);
 
   return (
     <>
-      {editor && (
+      {/* {editor && (
         <BubbleMenu editor={editor}>
           <div className="flex items-center gap-1 rounded-md border bg-background p-1 shadow-md">
             <button
@@ -137,7 +143,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
             </button>
           </div>
         </BubbleMenu>
-      )}
+      )} */}
 
       <EditorContent editor={editor} />
     </>
