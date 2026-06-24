@@ -91,28 +91,31 @@ export default function DocumentView() {
           </BreadcrumbList>
         </Breadcrumb>
       </header>
-      <div className="px-18 py-14">
-        <textarea
-          placeholder="New Page"
-          rows={1}
-          ref={textareaRef}
-          className="font-bold text-3xl mb-7 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none w-2/5"
-          value={selectedDocument?.title}
-          onChange={(e) => {
-            if (selectedDocument?.id) {
-              updateDocument(selectedDocument.id, {
-                title: e.target.value,
-              });
-            }
-          }}
-        />
-        <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min text-lg ">
-          {selectedDocument ? (
-            <Tiptap
-              document={selectedDocument}
-              content={selectedDocument.content ?? ""}
-            />
-          ) : null}
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-3xl px-8 py-16">
+          <textarea
+            placeholder="New Page"
+            rows={1}
+            ref={textareaRef}
+            className="w-full font-bold text-4xl tracking-tight mb-2 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/40"
+            value={selectedDocument?.title}
+            onChange={(e) => {
+              if (selectedDocument?.id) {
+                updateDocument(selectedDocument.id, {
+                  title: e.target.value,
+                });
+              }
+            }}
+          />
+          <div className="text-base leading-relaxed">
+            {selectedDocument ? (
+              <Tiptap
+                key={selectedDocument.id}
+                document={selectedDocument}
+                content={selectedDocument.content ?? ""}
+              />
+            ) : null}
+          </div>
         </div>
       </div>
     </SidebarInset>
