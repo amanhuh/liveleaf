@@ -16,8 +16,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import type { SlashMenuProps } from "@/components/editor/types";
 
-export const SlashMenu = forwardRef(function SlashMenu(props: any, ref) {
+export const SlashMenu = forwardRef(function SlashMenu(props: SlashMenuProps, ref) {
   const { items, editor, range } = props;
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -70,7 +71,7 @@ export const SlashMenu = forwardRef(function SlashMenu(props: any, ref) {
       value={items[selectedIndex]?.title}
       onValueChange={(val) => {
         const idx = items.findIndex(
-          (item: any) => item.title.toLowerCase() === val.toLowerCase(),
+          (item) => item.title.toLowerCase() === val.toLowerCase(),
         );
         if (idx !== -1) setSelectedIndex(idx);
       }}
@@ -80,7 +81,7 @@ export const SlashMenu = forwardRef(function SlashMenu(props: any, ref) {
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Basic Blocks">
-          {items.map((item: any, index: number) => (
+          {items.map((item, index: number) => (
             <CommandItem
               key={item.title}
               ref={(el) => {

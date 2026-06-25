@@ -7,17 +7,9 @@ import {
   Code2,
   Minus,
 } from "lucide-react";
-import type { Editor } from "@tiptap/core";
+import type { CommandProps, SlashCommandItem } from "@/components/editor/types";
 
-type CommandProps = {
-  editor: Editor;
-  range: {
-    from: number;
-    to: number;
-  };
-};
-
-export const slashCommands = [
+export const slashCommands: SlashCommandItem[] = [
   {
     title: "Heading 1",
     icon: Heading1,

@@ -15,19 +15,15 @@ import {
   Strikethrough,
 } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
-import { useMemo, useState, useEffect } from "react";
-import type { Document } from "@/types/document.types";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import debounce from "lodash/debounce";
 import { SlashCommand } from "@/components/editor/extensions/slash-command";
 import { cn } from "@/lib/utils";
-
-type TiptapProps = {
-  document: Document;
-  content: string;
-};
+import type { TiptapProps } from "@/components/editor/types";
 
 export default function Tiptap({ document, content }: TiptapProps) {
   const [, forceUpdate] = useState({});
+  const formattedToRef = useRef<number | null>(null);
 
   const updateDocument = useDocumentStore((state) => state.updateDocument);
 
@@ -66,7 +62,22 @@ export default function Tiptap({ document, content }: TiptapProps) {
 
   useEffect(() => {
     if (!editor) return;
-    const update = () => forceUpdate({});
+    const update = () => {
+      forceUpdate({});
+      
+      const { selection } = editor.state;
+      if (selection.empty && formattedToRef.current !== null) {
+        if (selection.from >= formattedToRef.current) {
+          const view = editor.view;
+          setTimeout(() => {
+            if (view && !view.isDestroyed) {
+              view.dispatch(view.state.tr.setStoredMarks([]));
+            }
+          }, 0);
+        }
+        formattedToRef.current = null;
+      }
+    };
     editor.on("selectionUpdate", update);
     editor.on("transaction", update);
     return () => {
@@ -74,6 +85,20 @@ export default function Tiptap({ document, content }: TiptapProps) {
       editor.off("transaction", update);
     };
   }, [editor]);
+
+  // Toggle a mark and clear stored marks so formatting
+  // doesn't "stick" to subsequently typed text
+  const toggle = useCallback(
+    (command: () => void) => {
+      if (!editor) return;
+      const { selection } = editor.state;
+      if (!selection.empty) {
+        formattedToRef.current = selection.to;
+      }
+      command();
+    },
+    [editor],
+  );
 
   return (
     <>
@@ -83,22 +108,22 @@ export default function Tiptap({ document, content }: TiptapProps) {
             {/* Text formatting */}
             <BubbleButton
               active={editor.isActive("bold")}
-              onClick={() => editor.chain().focus().toggleBold().run()}
+              onClick={() => toggle(() => editor.chain().focus().toggleBold().run())}
               icon={<Bold className="h-3.5 w-3.5" />}
             />
             <BubbleButton
               active={editor.isActive("italic")}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
+              onClick={() => toggle(() => editor.chain().focus().toggleItalic().run())}
               icon={<Italic className="h-3.5 w-3.5" />}
             />
             <BubbleButton
               active={editor.isActive("underline")}
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              onClick={() => toggle(() => editor.chain().focus().toggleUnderline().run())}
               icon={<UnderlineIcon className="h-3.5 w-3.5" />}
             />
             <BubbleButton
               active={editor.isActive("strike")}
-              onClick={() => editor.chain().focus().toggleStrike().run()}
+              onClick={() => toggle(() => editor.chain().focus().toggleStrike().run())}
               icon={<Strikethrough className="h-3.5 w-3.5" />}
             />
 
@@ -108,12 +133,12 @@ export default function Tiptap({ document, content }: TiptapProps) {
             {/* Code & Highlight */}
             <BubbleButton
               active={editor.isActive("code")}
-              onClick={() => editor.chain().focus().toggleCode().run()}
+              onClick={() => toggle(() => editor.chain().focus().toggleCode().run())}
               icon={<Code className="h-3.5 w-3.5" />}
             />
             <BubbleButton
               active={editor.isActive("highlight")}
-              onClick={() => editor.chain().focus().toggleHighlight().run()}
+              onClick={() => toggle(() => editor.chain().focus().toggleHighlight().run())}
               icon={<Highlighter className="h-3.5 w-3.5" />}
             />
           </div>
