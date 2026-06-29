@@ -20,6 +20,7 @@ import debounce from "lodash/debounce";
 import { SlashCommand } from "@/components/editor/extensions/slash-command";
 import { cn } from "@/lib/utils";
 import type { TiptapProps } from "@/components/editor/types";
+import { isTextSelection } from "@tiptap/core";
 
 export default function Tiptap({ document, content }: TiptapProps) {
   const [, forceUpdate] = useState({});
@@ -103,7 +104,19 @@ export default function Tiptap({ document, content }: TiptapProps) {
   return (
     <>
       {editor && (
-        <BubbleMenu editor={editor}>
+        <BubbleMenu
+          editor={editor}
+          shouldShow={({ editor, state }) => {
+            const { selection } = state;
+            return (
+              editor.isEditable &&
+              editor.view.hasFocus() &&
+              !selection.empty &&
+              isTextSelection(selection) &&
+              !editor.isActive("codeBlock")
+            );
+          }}
+        >
           <div className="bubble-menu animate-in fade-in-0 zoom-in-95 flex items-center gap-0.5 rounded-xl border border-border/40 bg-background/80 backdrop-blur-xl p-1 shadow-xl shadow-black/[0.08] dark:shadow-black/30">
             {/* Text formatting */}
             <BubbleButton

@@ -2,7 +2,7 @@ import { Extension } from "@tiptap/core";
 import Suggestion from "@tiptap/suggestion";
 import tippy from "tippy.js";
 import { ReactRenderer } from "@tiptap/react";
-import { SlashMenu } from "@/components/editor/components/slash-menu";
+import { SlashMenu } from "@/components/editor/slash-menu";
 import type { SuggestionProps, SuggestionKeyDownProps, SlashMenuRef } from "@/components/editor/types";
 
 import { slashCommands } from "@/components/editor/extensions/slash-commands";
