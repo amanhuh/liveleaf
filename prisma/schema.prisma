@@ -11,3 +11,34 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id String @id @default(cuid())
+  username String @unique
+  email String @unique
+  displayName String?
+  avatarUrl String?
+  passwordHash String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ownedDocuments Document[]
+}
+
+model Document {
+  id String @id @default(cuid())
+  title String?
+  content Json?
+  plainText String?
+  icon String?
+  bannerUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String
+  parent Document? @relation("DocumentHierarchy", fields: [parentId], references: [id])
+  parentId String?
+  children Document[] @relation("DocumentHierarchy")
+  isArchived Boolean @default(false)
+
+  @@index([ownerId, isArchived])
+}
