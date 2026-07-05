@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, useEditorState } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -15,7 +15,7 @@ import {
   Strikethrough,
 } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
-import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import debounce from "lodash/debounce";
 import { SlashCommand } from "@/components/editor/extensions/slash-command";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,6 @@ import type { TiptapProps } from "@/components/editor/types";
 import { isTextSelection } from "@tiptap/core";
 
 export default function Tiptap({ document, content }: TiptapProps) {
-  const [, forceUpdate] = useState({});
   const formattedToRef = useRef<number | null>(null);
 
   const updateDocument = useDocumentStore((state) => state.updateDocument);
@@ -53,19 +52,9 @@ export default function Tiptap({ document, content }: TiptapProps) {
     onUpdate: ({ editor }) => {
       debouncedSave(editor.getHTML());
     },
-    editorProps: {
-      attributes: {
-        class:
-          "min-h-[60vh] focus:outline-none prose prose-neutral dark:prose-invert max-w-none",
-      },
-    },
-  });
-
-  useEffect(() => {
-    if (!editor) return;
-    const update = () => {
-      forceUpdate({});
-      
+    // Clear stored marks once the cursor moves past the formatted region.
+    // Using editor lifecycle callbacks (not useEffect) avoids React re-render cascades.
+    onSelectionUpdate: ({ editor }) => {
       const { selection } = editor.state;
       if (selection.empty && formattedToRef.current !== null) {
         if (selection.from >= formattedToRef.current) {
@@ -78,17 +67,32 @@ export default function Tiptap({ document, content }: TiptapProps) {
         }
         formattedToRef.current = null;
       }
-    };
-    editor.on("selectionUpdate", update);
-    editor.on("transaction", update);
-    return () => {
-      editor.off("selectionUpdate", update);
-      editor.off("transaction", update);
-    };
-  }, [editor]);
+    },
+    editorProps: {
+      attributes: {
+        class:
+          "min-h-[60vh] focus:outline-none prose prose-neutral dark:prose-invert max-w-none",
+      },
+    },
+  });
 
-  // Toggle a mark and clear stored marks so formatting
-  // doesn't "stick" to subsequently typed text
+  // useEditorState subscribes to editor transactions and re-renders ONLY when
+  // the selected values change (deep-equal by default), unlike forceUpdate()
+  // which re-rendered on every single transaction regardless.
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      isBold: editor?.isActive("bold") ?? false,
+      isItalic: editor?.isActive("italic") ?? false,
+      isUnderline: editor?.isActive("underline") ?? false,
+      isStrike: editor?.isActive("strike") ?? false,
+      isCode: editor?.isActive("code") ?? false,
+      isHighlight: editor?.isActive("highlight") ?? false,
+    }),
+  });
+
+  // Toggle a mark and record the end of the formatted region so we can
+  // clear stored marks once the cursor leaves it.
   const toggle = useCallback(
     (command: () => void) => {
       if (!editor) return;
@@ -120,22 +124,22 @@ export default function Tiptap({ document, content }: TiptapProps) {
           <div className="bubble-menu animate-in fade-in-0 zoom-in-95 flex items-center gap-0.5 rounded-xl border border-border/40 bg-background/80 backdrop-blur-xl p-1 shadow-xl shadow-black/[0.08] dark:shadow-black/30">
             {/* Text formatting */}
             <BubbleButton
-              active={editor.isActive("bold")}
+              active={editorState?.isBold ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleBold().run())}
               icon={<Bold className="h-3.5 w-3.5" />}
             />
             <BubbleButton
-              active={editor.isActive("italic")}
+              active={editorState?.isItalic ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleItalic().run())}
               icon={<Italic className="h-3.5 w-3.5" />}
             />
             <BubbleButton
-              active={editor.isActive("underline")}
+              active={editorState?.isUnderline ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleUnderline().run())}
               icon={<UnderlineIcon className="h-3.5 w-3.5" />}
             />
             <BubbleButton
-              active={editor.isActive("strike")}
+              active={editorState?.isStrike ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleStrike().run())}
               icon={<Strikethrough className="h-3.5 w-3.5" />}
             />
@@ -145,12 +149,12 @@ export default function Tiptap({ document, content }: TiptapProps) {
 
             {/* Code & Highlight */}
             <BubbleButton
-              active={editor.isActive("code")}
+              active={editorState?.isCode ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleCode().run())}
               icon={<Code className="h-3.5 w-3.5" />}
             />
             <BubbleButton
-              active={editor.isActive("highlight")}
+              active={editorState?.isHighlight ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleHighlight().run())}
               icon={<Highlighter className="h-3.5 w-3.5" />}
             />
