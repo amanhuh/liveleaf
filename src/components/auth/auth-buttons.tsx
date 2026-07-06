@@ -52,6 +52,7 @@ export function GitHubSignInButton() {
   const router = useRouter();
 
   function handleGitHub() {
+    console.log('sdsds')
     startTransition(async () => {
       const { error } = await authClient.signIn.social({
         provider: "github",
