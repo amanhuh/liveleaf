@@ -2,40 +2,11 @@
 
 import { create } from "zustand";
 import type { Document } from "@/types/document.types";
-import type { CreateDocumentOptions } from "@/types/document.types";
 import { persist } from "zustand/middleware";
 
-const now = new Date();
-const mockDocuments: Document[] = [
-  {
-    id: "1",
-    title: "1st document",
-    content: "<p>Hello</p>",
-    createdAt: now,
-    updatedAt: now,
-    parentId: null,
-  },
-  {
-    id: "2",
-    title: "2nd document",
-    content: "<p>Hello</p>",
-    createdAt: now,
-    updatedAt: now,
-    parentId: null,
-  },
-  {
-    id: "3",
-    title: "3rd document",
-    content: "<p>Hello</p>",
-    createdAt: now,
-    updatedAt: now,
-    parentId: "1",
-  },
-];
 
 const initialState = {
-  documents: mockDocuments,
-  selectedDocumentId: null,
+  documents: [],
   expandedDocumentIds: [],
 };
 
@@ -58,15 +29,10 @@ function getDescendantIds(
 
 interface DocumentStore {
   documents: Document[];
-  lastOpenedDocumentId: string | null;
   currentDocumentId: string | null;
   expandedDocumentIds: string[];
 
-  setLastOpenedDocumentId: (id: string) => void;
-
   setCurrentDocumentId: (id: string) => void;
-
-  createDocument: (options?: CreateDocumentOptions) => Document;
 
   updateDocument: (id: string, updates: Partial<Document>) => void;
 
@@ -82,42 +48,22 @@ interface DocumentStore {
 export const useDocumentStore = create<DocumentStore>()(
   persist(
     (set) => ({
-      documents: mockDocuments,
-      lastOpenedDocumentId: null,
+      documents: initialState.documents,
       currentDocumentId: null,
-      expandedDocumentIds: [],
-      setLastOpenedDocumentId: (id) =>
-        set({
-          lastOpenedDocumentId: id,
-        }),
-      setCurrentDocumentId: (id) => 
+      expandedDocumentIds: initialState.expandedDocumentIds,
+      setCurrentDocumentId: (id) =>
         set({
           currentDocumentId: id,
         }),
-      createDocument: ({ parentId, title }: CreateDocumentOptions = {}) => {
-        const newDocument: Document = {
-          id: crypto.randomUUID(),
-          title: title ?? "Untitled",
-          content: "",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          parentId: parentId ?? null,
-        };
-        set((state) => ({
-          documents: [...state.documents, newDocument],
-        }));
-
-        return newDocument;
-      },
       updateDocument: (id, updates) =>
         set((state) => ({
           documents: state.documents.map((doc) =>
             doc.id === id
               ? {
-                  ...doc,
-                  ...updates,
-                  updatedAt: new Date(),
-                }
+                ...doc,
+                ...updates,
+                updatedAt: new Date(),
+              }
               : doc,
           ),
         })),
@@ -131,8 +77,8 @@ export const useDocumentStore = create<DocumentStore>()(
         set((state) => ({
           expandedDocumentIds: state.expandedDocumentIds.includes(id)
             ? state.expandedDocumentIds.filter(
-                (expandedId) => expandedId !== id,
-              )
+              (expandedId) => expandedId !== id,
+            )
             : [...state.expandedDocumentIds, id],
         })),
       expandDocument: (id) =>
@@ -147,7 +93,6 @@ export const useDocumentStore = create<DocumentStore>()(
       name: "document-store",
       partialize: (state) => ({
         documents: state.documents,
-        lastOpenedDocumentId: state.lastOpenedDocumentId,
         currentDocumentId: state.currentDocumentId,
         expandedDocumentIds: state.expandedDocumentIds,
       }),

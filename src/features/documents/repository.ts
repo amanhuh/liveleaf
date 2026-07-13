@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { CreateDocumentPayload } from "./validation";
+import { CreateDocumentPayload, UpdateDocumentPayload } from "./validation";
 import { Document, Prisma } from "@/generated/prisma/client";
 
 export async function createDocument(ownerId: string, data: CreateDocumentPayload) {
@@ -41,5 +41,27 @@ export async function findManyByUser(ownerId: string): Promise<DocumentListItem[
 export async function findById(id: string, ownerId: string): Promise<Document | null> {
   return await prisma.document.findFirst({
     where: { id, ownerId },
+  });
+}
+
+export async function updateDocument(id: string, ownerId: string, data: UpdateDocumentPayload) {
+  const document = await findById(id, ownerId);
+  if (!document) throw new Error("NOT_FOUND");
+
+  return await prisma.document.update({
+    where: { id },
+    data,
+  });
+}
+
+export async function archiveDocument(id: string, ownerId: string) {
+  const document = await findById(id, ownerId);
+  if (!document) throw new Error("NOT_FOUND");
+
+  return await prisma.document.update({
+    where: { id },
+    data: {
+      isArchived: true,
+    },
   });
 }

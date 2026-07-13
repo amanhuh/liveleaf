@@ -6,3 +6,13 @@ export const createDocumentSchema = z.object({
 });
 
 export type CreateDocumentPayload = z.infer<typeof createDocumentSchema>;
+
+export const updateDocumentSchema = z.object({
+  title: z.string().optional(),
+  content: z.any().optional(),
+  plainText: z.string().optional(),
+  icon: z.string().optional(),
+  bannerUrl: z.string().url().optional(),
+});
+
+export type UpdateDocumentPayload = z.infer<typeof updateDocumentSchema>;
