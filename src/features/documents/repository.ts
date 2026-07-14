@@ -33,7 +33,7 @@ export type DocumentListItem = Prisma.DocumentGetPayload<{ select: typeof docume
 export async function findManyByUser(ownerId: string): Promise<DocumentListItem[]> {
   return await prisma.document.findMany({
     where: { ownerId, isArchived: false },
-    orderBy: { updatedAt: 'desc' },
+    orderBy: { createdAt: 'desc' },
     select: documentListSelect,
   });
 }
