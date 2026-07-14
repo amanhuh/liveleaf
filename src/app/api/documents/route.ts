@@ -5,30 +5,19 @@ import {
   createDocument,
 } from "@/features/documents/repository";
 import { createDocumentSchema } from "@/features/documents/validation";
-import { ZodError } from "zod";
+import { withApiHandler } from "@/lib/api/withApiHandler";
 
-export async function GET() {
+export const GET = withApiHandler(async (request: NextRequest) => {
   const session = await requireUser();
 
   const documents = await findManyByUser(session.user.id);
   return Response.json(documents)
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withApiHandler(async (request: NextRequest) => {
   const body = await request.json();
-
-  try {
-    const session = await requireUser();
-    const payload = createDocumentSchema.parse(body);
-    const document = await createDocument(session.user.id, payload);
-    return Response.json(document)
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return Response.json({ error: error.flatten() }, { status: 400 });
-    }
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
-  }
-}
+  const session = await requireUser();
+  const payload = createDocumentSchema.parse(body);
+  const document = await createDocument(session.user.id, payload);
+  return Response.json(document)
+})

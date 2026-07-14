@@ -77,3 +77,12 @@ export async function restoreDcoument(id: string, ownerId: string) {
     },
   });
 }
+
+export async function deleteDocument(id: string, ownerId: string) {
+  const document = await findById(id, ownerId);
+  if (!document) throw new Error("NOT_FOUND");
+
+  return await prisma.document.delete({
+    where: { id },
+  });
+}
