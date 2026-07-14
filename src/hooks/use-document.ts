@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { CreateDocumentPayload, UpdateDocumentPayload } from "@/features/documents/validation";
 import { api } from "@/lib/api";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function useDocuments() {
@@ -13,12 +13,12 @@ export function useDocuments() {
 
 export function useGetDocument(docId: string) {
     return useQuery({
-        queryKey: ["documents"],
+        queryKey: ["documents", docId],
         queryFn: () => api.documents.get(docId),
     })
 }
 
-export function useCreateDocument(payload: CreateDocumentPayload) {
+export function useCreateDocument() {
     const queryClient = useQueryClient();
     const router = useRouter();
     return useMutation({
@@ -30,10 +30,10 @@ export function useCreateDocument(payload: CreateDocumentPayload) {
     });
 }
 
-export function useUpdateDocument(docId: string, payload: UpdateDocumentPayload) {
+export function useUpdateDocument(docId: string) {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: () => api.documents.update(docId, payload),
+        mutationFn: (payload: UpdateDocumentPayload) => api.documents.update(docId, payload),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] })
     });
 }

@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { CreateDocumentPayload, UpdateDocumentPayload } from "./validation";
 import { Document, Prisma } from "@/generated/prisma/client";
+import { HttpError } from "@/lib/errors";
 
 export async function createDocument(ownerId: string, data: CreateDocumentPayload) {
   if (data.parentId) {
@@ -30,7 +31,7 @@ const documentListSelect = {
 
 export type DocumentListItem = Prisma.DocumentGetPayload<{ select: typeof documentListSelect }>;
 
-export async function findManyByUser(ownerId: string) {
+export async function findDocuments(ownerId: string) {
   return await prisma.document.findMany({
     where: { ownerId, isArchived: false },
     orderBy: { createdAt: 'desc' },
@@ -38,16 +39,13 @@ export async function findManyByUser(ownerId: string) {
   });
 }
 
-export async function findById(id: string, ownerId: string) {
-  return await prisma.document.findFirst({
-    where: { id, ownerId },
-  });
+export async function findDocument(id: string, ownerId: string) {
+  const document = await prisma.document.findFirst({ where: { id, ownerId } });
+  if (!document) throw new HttpError("Document not found", 404);
+  return document;
 }
 
 export async function updateDocument(id: string, ownerId: string, data: UpdateDocumentPayload) {
-  const document = await findById(id, ownerId);
-  if (!document) throw new Error("NOT_FOUND");
-
   return await prisma.document.update({
     where: { id },
     data,
@@ -55,9 +53,6 @@ export async function updateDocument(id: string, ownerId: string, data: UpdateDo
 }
 
 export async function archiveDocument(id: string, ownerId: string) {
-  const document = await findById(id, ownerId);
-  if (!document) throw new Error("NOT_FOUND");
-
   return await prisma.document.update({
     where: { id },
     data: {
@@ -66,10 +61,7 @@ export async function archiveDocument(id: string, ownerId: string) {
   });
 }
 
-export async function restoreDcoument(id: string, ownerId: string) {
-  const document = await findById(id, ownerId);
-  if (!document) throw new Error("NOT_FOUND");
-
+export async function restoreDocument(id: string, ownerId: string) {
   return await prisma.document.update({
     where: { id },
     data: {
@@ -79,9 +71,6 @@ export async function restoreDcoument(id: string, ownerId: string) {
 }
 
 export async function deleteDocument(id: string, ownerId: string) {
-  const document = await findById(id, ownerId);
-  if (!document) throw new Error("NOT_FOUND");
-
   return await prisma.document.delete({
     where: { id },
   });
