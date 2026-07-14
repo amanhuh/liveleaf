@@ -30,7 +30,7 @@ const documentListSelect = {
 
 export type DocumentListItem = Prisma.DocumentGetPayload<{ select: typeof documentListSelect }>;
 
-export async function findManyByUser(ownerId: string): Promise<DocumentListItem[]> {
+export async function findManyByUser(ownerId: string) {
   return await prisma.document.findMany({
     where: { ownerId, isArchived: false },
     orderBy: { createdAt: 'desc' },
@@ -38,7 +38,7 @@ export async function findManyByUser(ownerId: string): Promise<DocumentListItem[
   });
 }
 
-export async function findById(id: string, ownerId: string): Promise<Document | null> {
+export async function findById(id: string, ownerId: string) {
   return await prisma.document.findFirst({
     where: { id, ownerId },
   });
@@ -62,6 +62,18 @@ export async function archiveDocument(id: string, ownerId: string) {
     where: { id },
     data: {
       isArchived: true,
+    },
+  });
+}
+
+export async function restoreDcoument(id: string, ownerId: string) {
+  const document = await findById(id, ownerId);
+  if (!document) throw new Error("NOT_FOUND");
+
+  return await prisma.document.update({
+    where: { id },
+    data: {
+      isArchived: false,
     },
   });
 }

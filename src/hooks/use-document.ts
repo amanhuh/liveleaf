@@ -11,6 +11,13 @@ export function useDocuments() {
     });
 }
 
+export function useGetDocument(docId: string) {
+    return useQuery({
+        queryKey: ["documents"],
+        queryFn: () => api.documents.get(docId),
+    })
+}
+
 export function useCreateDocument(payload: CreateDocumentPayload) {
     const queryClient = useQueryClient();
     const router = useRouter();
@@ -27,6 +34,30 @@ export function useUpdateDocument(docId: string, payload: UpdateDocumentPayload)
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: () => api.documents.update(docId, payload),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] })
+    });
+}
+
+export function useArchiveDocument(docId: string) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: () => api.documents.archive(docId),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] })
+    });
+}
+
+export function useRestoreDocument(docId: string) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: () => api.documents.restore(docId),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] })
+    });
+}
+
+export function useDeleteDocument(docId: string) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: () => api.documents.delete(docId),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] })
     });
 }
