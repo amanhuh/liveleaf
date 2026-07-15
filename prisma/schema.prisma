@@ -40,12 +40,14 @@ model Document {
   updatedAt  DateTime   @updatedAt
   owner      User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId    String
-  parent     Document?  @relation("DocumentHierarchy", fields: [parentId], references: [id])
-  parentId   String?
-  children   Document[] @relation("DocumentHierarchy")
-  isArchived Boolean    @default(false)
+  parent       Document?  @relation("DocumentHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId     String?
+  children     Document[] @relation("DocumentHierarchy")
+  archivedAt   DateTime?
+  position     Float      @default(0)
 
-  @@index([ownerId, isArchived])
+  @@index([ownerId, archivedAt])
+  @@index([parentId])
 }
 
 model Session {

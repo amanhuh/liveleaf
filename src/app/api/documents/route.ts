@@ -6,6 +6,7 @@ import {
 } from "@/features/documents/repository";
 import { createDocumentSchema } from "@/features/documents/validation";
 import { withApiHandler } from "@/lib/api/withApiHandler";
+import { HttpError } from "@/lib/errors";
 
 export const GET = withApiHandler(async (request: NextRequest) => {
   const session = await requireUser();
@@ -19,5 +20,6 @@ export const POST = withApiHandler(async (request: NextRequest) => {
   const session = await requireUser();
   const payload = createDocumentSchema.parse(body);
   const document = await createDocument(session.user.id, payload);
+  if (!document) throw new HttpError("Document not found", 404);
   return Response.json(document)
 })

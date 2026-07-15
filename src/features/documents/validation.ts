@@ -11,8 +11,8 @@ export const updateDocumentSchema = z.object({
   title: z.string().optional(),
   content: z.any().optional(),
   plainText: z.string().optional(),
-  icon: z.string().optional(),
-  bannerUrl: z.string().url().optional(),
+  icon: z.string().optional().nullable(),
+  bannerUrl: z.string().url().optional().nullable(),
 });
 
 export type UpdateDocumentPayload = z.infer<typeof updateDocumentSchema>;
