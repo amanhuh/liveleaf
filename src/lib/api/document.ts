@@ -11,6 +11,8 @@ export const documents = {
 
   get: (id: string) => request(`/api/documents/${id}`),
 
+  getTrash: () => request('/api/documents/trash'),
+
   create: (payload: CreateDocumentPayload) => 
     request('/api/documents', {
       method: 'POST',

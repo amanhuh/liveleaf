@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function useDocuments() {
+export function useGetDocuments() {
     return useQuery({
         queryKey: ["documents"],
         queryFn: () => api.documents.getAll(),
@@ -16,6 +16,13 @@ export function useGetDocument(docId: string) {
         queryKey: ["documents", docId],
         queryFn: () => api.documents.get(docId),
     })
+}
+
+export function useGetTrashDocuments() {
+  return useQuery({
+    queryKey: ['documents', 'trash'],
+    queryFn: () => api.documents.getTrash(),
+  });
 }
 
 export function useCreateDocument() {
