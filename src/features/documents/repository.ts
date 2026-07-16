@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { CreateDocumentPayload, UpdateDocumentPayload } from "./validation";
 import { Prisma } from "@/generated/prisma/client";
+import { HttpError } from "@/lib/errors";
 
 export async function createDocument(ownerId: string, data: CreateDocumentPayload) {
   if (data.parentId) {
@@ -163,6 +164,7 @@ export async function findDocument(id: string, ownerId: string) {
 export async function updateDocument(id: string, ownerId: string, data: UpdateDocumentPayload) {
   const document = await findDocument(id, ownerId);
   if (!document) return null;
+
   return await prisma.document.update({
     where: { id },
     data,
@@ -178,18 +180,103 @@ export async function archiveDocument(id: string, ownerId: string) {
   });
 }
 
+interface AncestorRow {
+  id: string;
+  archivedAt: Date | null;
+  depth: number;
+};
+
+interface ArchiveContext {
+  id: string;
+  archivedAt: Date | null;
+  archivedAncestorId: string | null;
+  archivedAncestorAt: Date | null;
+  isDirectlyArchived: boolean;
+  isEffectivelyArchived: boolean;
+};
+
+async function getArchiveContext(
+  id: string,
+  ownerId: string,
+): Promise<ArchiveContext | null> {
+  const rows = await prisma.$queryRaw<AncestorRow[]>`
+    WITH RECURSIVE ancestors AS (
+      SELECT
+        d.id,
+        d."parentId",
+        d."archivedAt",
+        0 AS depth
+      FROM "Document" d
+      WHERE d.id = ${id}
+        AND d."ownerId" = ${ownerId}
+
+      UNION ALL
+
+      SELECT
+        parent.id,
+        parent."parentId",
+        parent."archivedAt",
+        ancestors.depth + 1 AS depth
+      FROM "Document" parent
+      INNER JOIN ancestors ON ancestors."parentId" = parent.id
+      WHERE parent."ownerId" = ${ownerId}
+    )
+
+    SELECT
+      id,
+      "archivedAt",
+      depth
+    FROM ancestors
+    ORDER BY depth ASC;
+  `;
+
+  const self = rows.find((row) => row.depth === 0);
+  if (!self) return null;
+
+  const archivedAncestor = rows.find(
+    (row) => row.depth > 0 && row.archivedAt !== null,
+  );
+
+  return {
+    id: self.id,
+    archivedAt: self.archivedAt,
+    archivedAncestorId: archivedAncestor?.id ?? null,
+    archivedAncestorAt: archivedAncestor?.archivedAt ?? null,
+    isDirectlyArchived: self.archivedAt !== null,
+    isEffectivelyArchived:
+      self.archivedAt !== null || archivedAncestor !== undefined,
+  };
+}
+
 export async function restoreDocument(id: string, ownerId: string) {
-  const document = await findDocument(id, ownerId);
-  if (!document) return null;
+  const context = await getArchiveContext(id, ownerId);
+  if (!context) return null;
+
+  if (!context.isEffectivelyArchived) {
+    return await findDocument(id, ownerId);
+  }
+
   return await prisma.document.update({
     where: { id },
-    data: { archivedAt: null },
+    data: context.archivedAncestorId
+      ? {
+          archivedAt: null,
+          parentId: null,
+        }
+      : {
+          archivedAt: null,
+        },
   });
 }
 
 export async function deleteDocument(id: string, ownerId: string) {
-  const document = await findDocument(id, ownerId);
-  if (!document) return null;
+  const context = await getArchiveContext(id, ownerId);
+  if (!context) return null;
+
+  if (!context.isEffectivelyArchived) {
+    throw new HttpError("Document must be archived before deletion", 409);
+  }
+
   return await prisma.document.delete({
     where: { id },
   });
