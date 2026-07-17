@@ -12,22 +12,18 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { PlusIcon } from "lucide-react";
-import { useDocumentStore } from "@/stores/document-store";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import TreeItem from "./tree-item";
+import { useGetDocuments, useCreateDocument } from "@/hooks/use-document";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const params = useParams<{
-    documentId: string;
-  }>();
+  const params = useParams<{ documentId: string }>();
   const selectedDocumentId = params.documentId;
-  const router = useRouter();
-  const documents = useDocumentStore((state) => state.documents);
+  const { data: documents = [] } = useGetDocuments();
   const rootDocs = documents.filter((doc) => doc.parentId === null);
-  const createDocument = useDocumentStore((state) => state.createDocument);
-  const [renamingDocumentId, setRenamingDocumentId] = useState<string | null>(
-    null,
-  );
+  const createDocument = useCreateDocument();
+  const [renamingDocumentId, setRenamingDocumentId] = useState<string | null>(null);
+
   return (
     <Sidebar {...props}>
       <SidebarContent>
@@ -39,8 +35,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const doc = createDocument();
-                router.push(`/d/${doc.id}`);
+                createDocument.mutate({});
               }}
             />
           </SidebarGroupLabel>
@@ -64,4 +59,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </Sidebar>
   );
 }
-

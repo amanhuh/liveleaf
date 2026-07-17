@@ -4,6 +4,7 @@ import {
   findDocument,
   updateDocument,
   deleteDocument,
+  DocumentListItem,
 } from "@/features/documents/repository";
 import { updateDocumentSchema } from "@/features/documents/validation";
 import { withApiHandler } from "@/lib/api/withApiHandler";

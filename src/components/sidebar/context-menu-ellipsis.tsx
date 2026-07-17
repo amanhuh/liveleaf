@@ -1,6 +1,6 @@
 "use client";
 
-import type { Document } from "@/types/document.types";
+import type { DocumentListItem } from "@/features/documents/repository";
 import { FilePlusCorner, SquarePen, Trash, Link } from "lucide-react";
 import {
   ContextMenuContent,
@@ -10,12 +10,13 @@ import {
 import { toast } from "sonner";
 import { useDocumentStore } from "@/stores/document-store";
 import { useRouter, useParams } from "next/navigation";
+import { useDeleteDocument, useCreateDocument, useGetDocuments } from "@/hooks/use-document";
 
 export function ContextMenuEllipsis({
   document,
   onRename,
 }: {
-  document: Document;
+  document: DocumentListItem;
   onRename: () => void;
 }) {
   const router = useRouter();
@@ -24,10 +25,10 @@ export function ContextMenuEllipsis({
   }>();
   const selectedDocumentId = params.documentId;
 
-  const deleteDocument = useDocumentStore((state) => state.deleteDocument);
-  const createDocument = useDocumentStore((state) => state.createDocument);
+  const { data: documents = [] } = useGetDocuments();
+  const deleteDocument = useDeleteDocument(document.id);
+  const createDocument = useCreateDocument();
   const expandDocument = useDocumentStore((state) => state.expandDocument);
-  const documents = useDocumentStore((state) => state.documents);
   const rootDocs = documents.filter((doc) => doc.parentId === null);
   const isCurrentDocument = selectedDocumentId === document.id;
   const fallbackDocumentId =
@@ -41,19 +42,20 @@ export function ContextMenuEllipsis({
   };
 
   const handleDelete = () => {
-    deleteDocument(document.id);
+    deleteDocument.mutate(undefined, {
+      onSuccess: () => {
+        if (!isCurrentDocument) {
+          return;
+        }
 
-    if (!isCurrentDocument) {
-      return;
-    }
+        if (!fallbackDocumentId) {
+          createDocument.mutate({});
+          return;
+        }
 
-    if (!fallbackDocumentId) {
-      const doc = createDocument();
-      router.push(`/d/${doc.id}`);
-      return;
-    }
-
-    router.push(`/d/${fallbackDocumentId}`);
+        router.push(`/d/${fallbackDocumentId}`);
+      }
+    });
   };
 
   return (
@@ -68,8 +70,7 @@ export function ContextMenuEllipsis({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          const doc = createDocument({ parentId: document.id });
-          router.push(`/d/${doc.id}`);
+          createDocument.mutate({ parentId: document.id });
           expandDocument(document.id);
         }}
       >

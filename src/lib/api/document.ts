@@ -1,39 +1,39 @@
-import type { UpdateDocumentPayload, CreateDocumentPayload } from "@/features/documents/validation";
+import type { Document, DocumentListItem, TrashDocumentTreeItem, UpdateDocumentPayload, CreateDocumentPayload, CreateDocumentInput } from "@/features/documents";
 
-async function request(url: string, options?: RequestInit) {
+async function request<T = any>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
   if (!res.ok) throw new Error(`API error ${res.status}: ${url}`);
   return res.json();
 }
 
 export const documents = {
-  getAll: () => request('/api/documents'),
+  getAll: (): Promise<DocumentListItem[]> => request('/api/documents'),
 
-  get: (id: string) => request(`/api/documents/${id}`),
+  get: (id: string): Promise<Document> => request(`/api/documents/${id}`),
 
-  getTrash: () => request('/api/documents/trash'),
+  getTrash: (): Promise<TrashDocumentTreeItem[]> => request('/api/documents/trash'),
 
-  create: (payload: CreateDocumentPayload) => 
+  create: (payload: CreateDocumentInput): Promise<Document> =>
     request('/api/documents', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     }),
 
-  update: (id: string, payload: UpdateDocumentPayload) =>
+  update: (id: string, payload: UpdateDocumentPayload): Promise<Document> =>
     request(`/api/documents/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     }),
 
-  archive: (id: string) =>
+  archive: (id: string): Promise<Document> =>
     request(`/api/documents/${id}/archive`, { method: 'POST' }),
 
-  restore: (id: string) =>
+  restore: (id: string): Promise<Document> =>
     request(`/api/documents/${id}/restore`, { method: 'POST' }),
     
-  delete: (id: string) =>
+  delete: (id: string): Promise<void> =>
     request(`/api/documents/${id}`, {
       method: 'DELETE',
     }),

@@ -13,11 +13,13 @@ import { Separator } from "@/components/ui/separator";
 import { Fragment } from "react";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useDocumentStore } from "@/stores/document-store";
-import { Document } from "@/types/document.types";
-import { useRef, useEffect } from "react";
+import type { Document, DocumentListItem } from "@/features/documents";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useGetDocuments, useGetDocument, useUpdateDocument } from "@/hooks/use-document";
+import debounce from "lodash/debounce";
 
 export default function DocumentView() {
   const router = useRouter();
@@ -25,19 +27,37 @@ export default function DocumentView() {
     documentId: string;
   }>();
   const selectedDocumentId = params.documentId;
-  const documents = useDocumentStore((state) => state.documents);
-  const updateDocument = useDocumentStore((state) => state.updateDocument);
+  const { data: documents = [], isLoading: isListLoading } = useGetDocuments();
+  const { data: selectedDocument, isLoading: isDocLoading } = useGetDocument(selectedDocumentId);
+  const updateDocument = useUpdateDocument(selectedDocumentId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const selectedDocument = documents.find(
-    (doc) => doc.id === selectedDocumentId,
+  const [title, setTitle] = useState("");
+
+  useEffect(() => {
+    setTitle(selectedDocument?.title ?? "");
+  }, [selectedDocument?.id, selectedDocument?.title]);
+
+  const debouncedSaveTitle = useMemo(
+    () =>
+      debounce((newTitle: string) => {
+        updateDocument.mutate({ title: newTitle });
+      }, 500),
+    [updateDocument],
   );
+
+  useEffect(() => {
+    return () => {
+      debouncedSaveTitle.cancel();
+    };
+  }, [debouncedSaveTitle]);
 
   const breadcrumb = selectedDocument
     ? getBreadCrumbs(documents, selectedDocumentId)
     : [];
 
   useEffect(() => {
+    if (isListLoading || isDocLoading) return;
     if (selectedDocument) return;
 
     if (documents.length > 0) {
@@ -45,7 +65,7 @@ export default function DocumentView() {
     } else {
       router.replace("/");
     }
-  }, [selectedDocument, documents, router]);
+  }, [selectedDocument, documents, isListLoading, isDocLoading, router]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -98,13 +118,10 @@ export default function DocumentView() {
             rows={1}
             ref={textareaRef}
             className="w-full font-bold text-4xl tracking-tight mb-2 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/40"
-            value={selectedDocument?.title}
+            value={title}
             onChange={(e) => {
-              if (selectedDocument?.id) {
-                updateDocument(selectedDocument.id, {
-                  title: e.target.value,
-                });
-              }
+              setTitle(e.target.value);
+              debouncedSaveTitle(e.target.value);
             }}
           />
           <div className="text-base leading-relaxed">
@@ -123,10 +140,10 @@ export default function DocumentView() {
 }
 
 function getBreadCrumbs(
-  documents: Document[],
+  documents: DocumentListItem[],
   selectedDocumentId: string,
-): Document[] {
-  const breadCrumb: Document[] = [];
+): DocumentListItem[] {
+  const breadCrumb: DocumentListItem[] = [];
   let current = documents.find((doc) => doc.id === selectedDocumentId);
 
   while (current) {

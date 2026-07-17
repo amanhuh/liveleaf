@@ -5,7 +5,8 @@ export const createDocumentSchema = z.object({
   parentId: z.string().cuid().nullable().optional().default(null),
 });
 
-export type CreateDocumentPayload = z.infer<typeof createDocumentSchema>;
+export type CreateDocumentPayload = z.output<typeof createDocumentSchema>;
+export type CreateDocumentInput = z.input<typeof createDocumentSchema>;
 
 export const updateDocumentSchema = z.object({
   title: z.string().optional(),

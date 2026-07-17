@@ -14,8 +14,8 @@ import {
   Highlighter,
   Strikethrough,
 } from "lucide-react";
-import { useDocumentStore } from "@/stores/document-store";
-import { useMemo, useCallback, useRef } from "react";
+import { useUpdateDocument } from "@/hooks/use-document";
+import { useMemo, useCallback, useRef, useEffect } from "react";
 import debounce from "lodash/debounce";
 import { SlashCommand } from "@/components/editor/extensions/slash-command";
 import { cn } from "@/lib/utils";
@@ -25,15 +25,21 @@ import { isTextSelection } from "@tiptap/core";
 export default function Tiptap({ document, content }: TiptapProps) {
   const formattedToRef = useRef<number | null>(null);
 
-  const updateDocument = useDocumentStore((state) => state.updateDocument);
+  const updateDocument = useUpdateDocument(document.id);
 
   const debouncedSave = useMemo(
     () =>
-      debounce((content: string) => {
-        updateDocument(document.id, { content });
+      debounce((htmlContent: string) => {
+        updateDocument.mutate({ content: htmlContent });
       }, 500),
-    [document.id, updateDocument],
+    [updateDocument],
   );
+
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [debouncedSave]);
 
   const editor = useEditor({
     immediatelyRender: false,

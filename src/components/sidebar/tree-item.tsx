@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { Document } from "@/types/document.types";
+import type { DocumentListItem } from "@/features/documents/repository"
 import {
   Collapsible,
   CollapsibleContent,
@@ -23,10 +23,11 @@ import Link from "next/link";
 import { FileIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 import { useRouter } from "next/navigation";
+import { useCreateDocument, useUpdateDocument } from "@/hooks/use-document";
 
 export type TreeItemProps = {
-  item: Document;
-  docs: Document[];
+  item: DocumentListItem;
+  docs: DocumentListItem[];
   selectedDocumentId: string;
   renamingDocumentId: string | null;
   setRenamingDocumentId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -43,13 +44,16 @@ export default function TreeItem({
   const expandedDocumentIds = useDocumentStore(
     (state) => state.expandedDocumentIds,
   );
+  const isOpen = expandedDocumentIds.includes(item.id);
   const toggleExpanded = useDocumentStore((state) => state.toggleExpanded);
-  const createDocument = useDocumentStore((state) => state.createDocument);
   const expandDocument = useDocumentStore((state) => state.expandDocument);
-  const updateDocument = useDocumentStore((state) => state.updateDocument);
+
   const children = docs.filter((doc) => doc.parentId === item.id);
   const hasChildren = children.length > 0;
-  const isOpen = expandedDocumentIds.includes(item.id);
+
+  const createDocument = useCreateDocument();
+  const updateDocument = useUpdateDocument(item.id);
+
   const documentName = item.title.trim() ? item.title : "New Page";
   const [draftTitle, setDraftTitle] = useState(documentName);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,14 +67,14 @@ export default function TreeItem({
   }, [renamingDocumentId, item.id]);
 
   const handleSave = () => {
-    updateDocument(item.id, {
+    updateDocument.mutate({
       title: draftTitle.trim() || "Untitled",
     });
 
     setRenamingDocumentId(null);
   };
   const handleCancel = () => {
-    setDraftTitle(item.title);
+    setDraftTitle(documentName);
     setRenamingDocumentId(null);
   };
 
@@ -154,11 +158,10 @@ export default function TreeItem({
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  const doc = createDocument({
+                                  createDocument.mutate({
                                     parentId: item.id,
                                   });
                                   expandDocument(item.id);
-                                  router.push(`/d/${doc.id}`);
                                 }}
                               />
                             </TooltipTrigger>
@@ -258,9 +261,8 @@ export default function TreeItem({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        const doc = createDocument({ parentId: item.id });
+                        createDocument.mutate({ parentId: item.id });
                         expandDocument(item.id);
-                        router.push(`/d/${doc.id}`);
                       }}
                     />
                   </TooltipTrigger>

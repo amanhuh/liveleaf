@@ -1,4 +1,4 @@
-import type { Document } from "@/types/document.types";
+import type { Document } from "@/features/documents";
 import type { Editor } from "@tiptap/core";
 import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
 import type { LucideIcon } from "lucide-react";

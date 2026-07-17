@@ -1,11 +1,11 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import type { CreateDocumentPayload, UpdateDocumentPayload } from "@/features/documents/validation";
+import type { DocumentListItem, TrashDocumentTreeItem, UpdateDocumentPayload, CreateDocumentPayload, CreateDocumentInput } from "@/features/documents";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function useGetDocuments() {
-    return useQuery({
+    return useQuery<DocumentListItem[]>({
         queryKey: ["documents"],
         queryFn: () => api.documents.getAll(),
     });
@@ -19,20 +19,20 @@ export function useGetDocument(docId: string) {
 }
 
 export function useGetTrashDocuments() {
-  return useQuery({
-    queryKey: ['documents', 'trash'],
-    queryFn: () => api.documents.getTrash(),
-  });
+    return useQuery({
+        queryKey: ['documents', 'trash'],
+        queryFn: () => api.documents.getTrash(),
+    });
 }
 
 export function useCreateDocument() {
     const queryClient = useQueryClient();
     const router = useRouter();
     return useMutation({
-        mutationFn: (payload: CreateDocumentPayload) => api.documents.create(payload),
-        onSuccess: (newData) => {
+        mutationFn: (payload: CreateDocumentInput) => api.documents.create(payload),
+        onSuccess: (document) => {
             queryClient.invalidateQueries({ queryKey: ["documents"] });
-            router.push(`/d/${newData.id}`);
+            router.push(`/d/${document.id}`);
         }
     });
 }
@@ -41,7 +41,10 @@ export function useUpdateDocument(docId: string) {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (payload: UpdateDocumentPayload) => api.documents.update(docId, payload),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] })
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["documents"] });
+            queryClient.invalidateQueries({ queryKey: ["documents", docId] });
+        }
     });
 }
 
