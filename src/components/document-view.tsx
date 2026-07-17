@@ -129,7 +129,7 @@ export default function DocumentView() {
               <Tiptap
                 key={selectedDocument.id}
                 document={selectedDocument}
-                content={selectedDocument.content ?? ""}
+                content={selectedDocument.content}
               />
             ) : null}
           </div>

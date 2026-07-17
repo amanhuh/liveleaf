@@ -5,7 +5,7 @@ import type { LucideIcon } from "lucide-react";
 
 export type TiptapProps = {
   document: Document;
-  content: string;
+  content: Document["content"];
 };
 
 export type CommandProps = {

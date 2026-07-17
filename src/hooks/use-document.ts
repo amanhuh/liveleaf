@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import type { DocumentListItem, TrashDocumentTreeItem, UpdateDocumentPayload, CreateDocumentPayload, CreateDocumentInput } from "@/features/documents";
+import type { Document, DocumentListItem, TrashDocumentTreeItem, UpdateDocumentPayload, CreateDocumentPayload, CreateDocumentInput } from "@/features/documents";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,7 @@ export function useGetDocuments() {
 }
 
 export function useGetDocument(docId: string) {
-    return useQuery({
+    return useQuery<Document>({
         queryKey: ["documents", docId],
         queryFn: () => api.documents.get(docId),
     })

@@ -29,8 +29,8 @@ export default function Tiptap({ document, content }: TiptapProps) {
 
   const debouncedSave = useMemo(
     () =>
-      debounce((htmlContent: string) => {
-        updateDocument.mutate({ content: htmlContent });
+      debounce((jsonContent: any) => {
+        updateDocument.mutate({ content: jsonContent });
       }, 500),
     [updateDocument],
   );
@@ -56,7 +56,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
     ],
     content,
     onUpdate: ({ editor }) => {
-      debouncedSave(editor.getHTML());
+      debouncedSave(editor.getJSON());
     },
     // Clear stored marks once the cursor moves past the formatted region.
     // Using editor lifecycle callbacks (not useEffect) avoids React re-render cascades.
