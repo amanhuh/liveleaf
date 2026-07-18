@@ -10,7 +10,7 @@ export type CreateDocumentInput = z.input<typeof createDocumentSchema>;
 
 export const updateDocumentSchema = z.object({
   title: z.string().optional(),
-  content: z.any().optional(),
+  content: z.unknown().optional(),
   plainText: z.string().optional(),
   icon: z.string().optional().nullable(),
   bannerUrl: z.string().url().optional().nullable(),

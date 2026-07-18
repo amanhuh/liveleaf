@@ -1,6 +1,6 @@
 "use client";
 
-import type { DocumentListItem } from "@/features/documents/repository";
+import type { DocumentListItemDto } from "@/features/documents";
 import { FilePlusCorner, SquarePen, Trash, Link } from "lucide-react";
 import {
   ContextMenuContent,
@@ -10,13 +10,13 @@ import {
 import { toast } from "sonner";
 import { useDocumentStore } from "@/stores/document-store";
 import { useRouter, useParams } from "next/navigation";
-import { useDeleteDocument, useCreateDocument, useGetDocuments } from "@/hooks/use-document";
+import { useCreateDocument, useGetDocuments, useArchiveDocument } from "@/hooks/use-document";
 
 export function ContextMenuEllipsis({
   document,
   onRename,
 }: {
-  document: DocumentListItem;
+  document: DocumentListItemDto;
   onRename: () => void;
 }) {
   const router = useRouter();
@@ -26,7 +26,7 @@ export function ContextMenuEllipsis({
   const selectedDocumentId = params.documentId;
 
   const { data: documents = [] } = useGetDocuments();
-  const deleteDocument = useDeleteDocument(document.id);
+  const archiveDocument = useArchiveDocument(document.id);
   const createDocument = useCreateDocument();
   const expandDocument = useDocumentStore((state) => state.expandDocument);
   const rootDocs = documents.filter((doc) => doc.parentId === null);
@@ -41,8 +41,8 @@ export function ContextMenuEllipsis({
     toast("Copied page link to clipboard", { position: "bottom-right" });
   };
 
-  const handleDelete = () => {
-    deleteDocument.mutate(undefined, {
+  const handleArchive = () => {
+    archiveDocument.mutate(undefined, {
       onSuccess: () => {
         if (!isCurrentDocument) {
           return;
@@ -99,11 +99,11 @@ export function ContextMenuEllipsis({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          handleDelete();
+          handleArchive();
         }}
       >
         <Trash />
-        Delete
+        Move To Trash
       </ContextMenuItem>
     </ContextMenuContent>
   );

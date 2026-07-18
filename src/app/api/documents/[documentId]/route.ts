@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth/helper";
 import {
   findDocument,
+  findEditableDocument,
   updateDocument,
   deleteDocument,
   DocumentListItem,
@@ -13,7 +14,7 @@ import { HttpError } from "@/lib/errors";
 export const GET = withApiHandler<{ documentId: string }>(async (req, params) => {
   const { documentId } = params;
   const session = await requireUser();
-  const document = await findDocument(documentId, session.user.id);
+  const document = await findEditableDocument(documentId, session.user.id);
   if (!document) throw new HttpError("Document not found", 404);
   return Response.json(document);
 });

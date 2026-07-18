@@ -36,14 +36,17 @@ export async function findActiveDocuments(ownerId: string): Promise<DocumentList
     WITH RECURSIVE active_tree AS (
       SELECT id, title, "createdAt", "updatedAt", "parentId", "archivedAt", icon, position
       FROM "Document"
-      WHERE "ownerId" = ${ownerId} 
-        AND "parentId" IS NULL 
+      WHERE "ownerId" = ${ownerId}
+        AND "parentId" IS NULL
         AND "archivedAt" IS NULL
+
       UNION ALL
+
       SELECT d.id, d.title, d."createdAt", d."updatedAt", d."parentId", d."archivedAt", d.icon, d.position
       FROM "Document" d
       INNER JOIN active_tree a ON d."parentId" = a.id
-      WHERE d."archivedAt" IS NULL
+      WHERE d."ownerId" = ${ownerId}
+        AND d."archivedAt" IS NULL
     )
     SELECT * FROM active_tree ORDER BY "createdAt" DESC;
   `;
@@ -154,6 +157,14 @@ ORDER BY
   `;
 }
 
+export async function findEditableDocument(id: string, ownerId: string) {
+  const context = await getArchiveContext(id, ownerId);
+  if (!context || context.isEffectivelyArchived) return null;
+
+  return await prisma.document.findFirst({
+    where: { id, ownerId },
+  });
+}
 
 export async function findDocument(id: string, ownerId: string) {
   const document = await prisma.document.findFirst({ where: { id, ownerId } });
@@ -162,12 +173,12 @@ export async function findDocument(id: string, ownerId: string) {
 }
 
 export async function updateDocument(id: string, ownerId: string, data: UpdateDocumentPayload) {
-  const document = await findDocument(id, ownerId);
+  const document = await findEditableDocument(id, ownerId);
   if (!document) return null;
-
+  
   return await prisma.document.update({
     where: { id },
-    data,
+    data
   });
 }
 

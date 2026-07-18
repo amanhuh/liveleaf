@@ -21,6 +21,7 @@ import { SlashCommand } from "@/components/editor/extensions/slash-command";
 import { cn } from "@/lib/utils";
 import type { TiptapProps } from "@/components/editor/types";
 import { isTextSelection } from "@tiptap/core";
+import type { JSONContent } from "@tiptap/core";
 
 export default function Tiptap({ document, content }: TiptapProps) {
   const formattedToRef = useRef<number | null>(null);
@@ -29,7 +30,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
 
   const debouncedSave = useMemo(
     () =>
-      debounce((jsonContent: any) => {
+      debounce((jsonContent: JSONContent) => {
         updateDocument.mutate({ content: jsonContent });
       }, 500),
     [updateDocument],
@@ -82,9 +83,6 @@ export default function Tiptap({ document, content }: TiptapProps) {
     },
   });
 
-  // useEditorState subscribes to editor transactions and re-renders ONLY when
-  // the selected values change (deep-equal by default), unlike forceUpdate()
-  // which re-rendered on every single transaction regardless.
   const editorState = useEditorState({
     editor,
     selector: ({ editor }) => ({
@@ -97,8 +95,6 @@ export default function Tiptap({ document, content }: TiptapProps) {
     }),
   });
 
-  // Toggle a mark and record the end of the formatted region so we can
-  // clear stored marks once the cursor leaves it.
   const toggle = useCallback(
     (command: () => void) => {
       if (!editor) return;
