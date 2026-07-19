@@ -74,7 +74,7 @@ export function DropdownMenuEllipsis({
           e.stopPropagation();
         }}
       >
-        <EllipsisIcon />
+        <EllipsisIcon className="size-3.5 text-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-44 p-2"

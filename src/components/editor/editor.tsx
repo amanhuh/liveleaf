@@ -62,8 +62,6 @@ export default function Tiptap({ document, content }: TiptapProps) {
     onUpdate: ({ editor }) => {
       debouncedSave(editor.getJSON());
     },
-    // Clear stored marks once the cursor moves past the formatted region.
-    // Using editor lifecycle callbacks (not useEffect) avoids React re-render cascades.
     onSelectionUpdate: ({ editor }) => {
       const { selection } = editor.state;
       if (selection.empty && formattedToRef.current !== null) {
@@ -127,7 +125,6 @@ export default function Tiptap({ document, content }: TiptapProps) {
           }}
         >
           <div className="bubble-menu animate-in fade-in-0 zoom-in-95 flex items-center gap-0.5 rounded-xl border border-border/40 bg-background/80 backdrop-blur-xl p-1 shadow-xl shadow-black/[0.08] dark:shadow-black/30">
-            {/* Text formatting */}
             <BubbleButton
               active={editorState?.isBold ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleBold().run())}
@@ -148,11 +145,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
               onClick={() => toggle(() => editor.chain().focus().toggleStrike().run())}
               icon={<Strikethrough className="h-3.5 w-3.5" />}
             />
-
-            {/* Divider */}
             <div className="mx-0.5 h-4 w-px bg-border/60" />
-
-            {/* Code & Highlight */}
             <BubbleButton
               active={editorState?.isCode ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleCode().run())}

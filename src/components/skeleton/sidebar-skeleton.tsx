@@ -1,14 +1,26 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function SidebarSkeleton() {
+export function SidebarSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="flex flex-col gap-1 p-2">
       <Skeleton className="h-4 w-20 mb-3" />
-      <Skeleton className="h-7 w-full rounded-md" />
-      <Skeleton className="h-7 w-[90%] rounded-md ml-3" />
-      <Skeleton className="h-7 w-[85%] rounded-md ml-3" />
-      <Skeleton className="h-7 w-full rounded-md mt-1" />
-      <Skeleton className="h-7 w-[80%] rounded-md ml-3" />
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-2 px-2 py-1.5 animate-pulse"
+          style={{
+            marginLeft: i % 2 === 1 ? "12px" : "0px",
+          }}
+        >
+          <Skeleton className="size-4 shrink-0 rounded bg-sidebar-accent-foreground/5" />
+          <Skeleton
+            className="h-3.5 rounded bg-sidebar-accent-foreground/5"
+            style={{
+              width: `${Math.max(50, 90 - (i % 3) * 15)}%`,
+            }}
+          />
+        </div>
+      ))}
     </div>
   );
 }

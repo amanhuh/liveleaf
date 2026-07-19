@@ -16,16 +16,7 @@ export function DocumentSkeleton() {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-3xl px-8 py-16">
           <Skeleton className="h-10 w-64 mb-6" />
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-[92%]" />
-            <Skeleton className="h-4 w-[85%]" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-[78%]" />
-            <div className="mt-4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-[88%]" />
-          </div>
+
         </div>
       </div>
     </SidebarInset>

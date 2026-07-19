@@ -10,7 +10,7 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarRail,
-  SidebarFooter,
+  SidebarHeader,
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
@@ -20,6 +20,7 @@ import TreeItem from "./tree-item";
 import { useGetDocuments, useCreateDocument } from "@/hooks/use-document";
 import { SidebarSkeleton } from "@/components/skeleton/sidebar-skeleton";
 import { authClient } from "@/lib/auth/auth-client";
+import { useDocumentStore } from "@/stores/document-store";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session } = authClient.useSession();
   const [renamingDocumentId, setRenamingDocumentId] = useState<string | null>(null);
 
+  const lastDocumentCount = useDocumentStore((state) => state.lastDocumentCount);
+  const setLastDocumentCount = useDocumentStore((state) => state.setLastDocumentCount);
+
+  const [hydrated, setHydrated] = useState(false);
+  React.useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isDocsLoading) {
+      setLastDocumentCount(rootDocs.length);
+    }
+  }, [isDocsLoading, rootDocs.length, setLastDocumentCount]);
+
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
@@ -49,42 +64,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar {...props}>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>
-            <span>Documents</span>
-            <PlusIcon
-              className="ml-auto cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                createDocument.mutate({});
-              }}
-            />
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {isDocsLoading ? (
-                <SidebarSkeleton />
-              ) : (
-                rootDocs.map((doc) => (
-                  <TreeItem
-                    key={doc.id}
-                    selectedDocumentId={selectedDocumentId}
-                    item={doc}
-                    docs={documents}
-                    renamingDocumentId={renamingDocumentId}
-                    setRenamingDocumentId={setRenamingDocumentId}
-                  />
-                ))
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      {/* User profile and logout footer */}
-      <SidebarFooter>
+      <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -109,8 +89,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-(--dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                side="top"
-                align="end"
+                side="bottom"
+                align="start"
                 sideOffset={4}
               >
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
@@ -121,7 +101,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarFooter>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>
+            <span>Documents</span>
+            <PlusIcon
+              className="ml-auto cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                createDocument.mutate({});
+              }}
+            />
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {isDocsLoading ? (
+                <SidebarSkeleton count={hydrated ? lastDocumentCount : 3} />
+              ) : (
+                rootDocs.map((doc) => (
+                  <TreeItem
+                    key={doc.id}
+                    selectedDocumentId={selectedDocumentId}
+                    item={doc}
+                    docs={documents}
+                    renamingDocumentId={renamingDocumentId}
+                    setRenamingDocumentId={setRenamingDocumentId}
+                  />
+                ))
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
       <SidebarRail />
     </Sidebar>
   );

@@ -5,18 +5,21 @@ import { persist } from "zustand/middleware";
 
 const initialState = {
   expandedDocumentIds: [],
+  lastDocumentCount: 3,
+  sidebarWidth: 260,
 };
 
 interface DocumentStore {
   currentDocumentId: string | null;
   expandedDocumentIds: string[];
+  lastDocumentCount: number;
+  sidebarWidth: number;
 
   setCurrentDocumentId: (id: string) => void;
-
   toggleExpanded: (id: string) => void;
-
   expandDocument: (id: string) => void;
-
+  setLastDocumentCount: (count: number) => void;
+  setSidebarWidth: (width: number) => void;
   resetState: () => void;
 }
 
@@ -25,9 +28,19 @@ export const useDocumentStore = create<DocumentStore>()(
     (set) => ({
       currentDocumentId: null,
       expandedDocumentIds: initialState.expandedDocumentIds,
+      lastDocumentCount: initialState.lastDocumentCount,
+      sidebarWidth: initialState.sidebarWidth,
       setCurrentDocumentId: (id) =>
         set({
           currentDocumentId: id,
+        }),
+      setLastDocumentCount: (count) =>
+        set({
+          lastDocumentCount: count,
+        }),
+      setSidebarWidth: (width) =>
+        set({
+          sidebarWidth: width,
         }),
       toggleExpanded: (id) =>
         set((state) => ({
@@ -50,6 +63,8 @@ export const useDocumentStore = create<DocumentStore>()(
       partialize: (state) => ({
         currentDocumentId: state.currentDocumentId,
         expandedDocumentIds: state.expandedDocumentIds,
+        lastDocumentCount: state.lastDocumentCount,
+        sidebarWidth: state.sidebarWidth,
       }),
     },
   ),
