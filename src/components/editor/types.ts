@@ -1,11 +1,11 @@
-import type { Document } from "@/features/documents";
+import type { DocumentDto } from "@/features/documents";
 import type { Editor } from "@tiptap/core";
 import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
 import type { LucideIcon } from "lucide-react";
 
 export type TiptapProps = {
-  document: Document;
-  content: Document["content"];
+  document: DocumentDto;
+  content: DocumentDto["content"];
 };
 
 export type CommandProps = {

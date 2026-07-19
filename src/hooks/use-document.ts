@@ -81,28 +81,28 @@ export function useArchiveDocument(docId: string) {
     });
 }
 
-export function useRestoreDocument(docId: string) {
+export function useRestoreDocument() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: () => api.documents.restore(docId),
+        mutationFn: (id: string) => api.documents.restore(id),
         onSuccess: (document) => {
             queryClient.invalidateQueries({ queryKey: ["documents"] });
             queryClient.invalidateQueries({ queryKey: ["documents", "trash"] });
-            queryClient.setQueryData(["documents", docId], document);
+            queryClient.setQueryData(["documents", document.id], document);
         },
     });
 }
 
-export function useDeleteDocument(docId: string) {
+export function useDeleteDocument() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: () => api.documents.delete(docId),
-        onSuccess: () => {
+        mutationFn: (id: string) => api.documents.delete(id),
+        onSuccess: (document) => {
             queryClient.invalidateQueries({ queryKey: ["documents"] });
             queryClient.invalidateQueries({ queryKey: ["documents", "trash"] });
-            queryClient.removeQueries({ queryKey: ["documents", docId] });
+            queryClient.removeQueries({ queryKey: ["documents", document.id] });
         },
     });
 }

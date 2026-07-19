@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, Suspense } from "react";
 import { authClient } from "@/lib/auth/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+// ── GitHub social icons / google icons etc (omitted for diff accuracy) ──
 
 // ── GitHub OAuth icon ─────────────────────────────────────────────────────────
 function GitHubIcon({ className }: { className?: string }) {
@@ -47,16 +49,17 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 // ── GitHub Sign-in button (fully wired) ───────────────────────────────────────
-export function GitHubSignInButton() {
+function GitHubSignInButtonInner() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "/d";
 
   function handleGitHub() {
-    console.log('sdsds')
     startTransition(async () => {
       const { error } = await authClient.signIn.social({
         provider: "github",
-        callbackURL: "/d",
+        callbackURL: next,
       });
       if (error) {
         toast.error(error.message ?? "GitHub sign-in failed. Try again.");
@@ -82,6 +85,20 @@ export function GitHubSignInButton() {
     </button>
   );
 }
+
+export function GitHubSignInButton() {
+  return (
+    <Suspense fallback={
+      <button className="auth-social-btn" disabled>
+        <GitHubIcon />
+        <span>Continue with GitHub</span>
+      </button>
+    }>
+      <GitHubSignInButtonInner />
+    </Suspense>
+  );
+}
+
 
 // ── Static Google button ──────────────────────────────────────────────────────
 export function GoogleSignInButton() {

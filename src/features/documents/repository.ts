@@ -48,7 +48,7 @@ export async function findActiveDocuments(ownerId: string): Promise<DocumentList
       WHERE d."ownerId" = ${ownerId}
         AND d."archivedAt" IS NULL
     )
-    SELECT * FROM active_tree ORDER BY "createdAt" DESC;
+    SELECT * FROM active_tree ORDER BY position ASC;
   `;
 }
 
@@ -178,7 +178,10 @@ export async function updateDocument(id: string, ownerId: string, data: UpdateDo
   
   return await prisma.document.update({
     where: { id },
-    data
+    data: {
+      ...data,
+      content: data.content as Prisma.InputJsonValue | undefined,
+    }
   });
 }
 

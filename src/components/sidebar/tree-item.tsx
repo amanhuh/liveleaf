@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { DocumentListItem } from "@/features/documents/repository"
+import type { DocumentListItemDto } from "@/features/documents"
 import {
   Collapsible,
   CollapsibleContent,
@@ -26,8 +26,8 @@ import { useRouter } from "next/navigation";
 import { useCreateDocument, useUpdateDocument } from "@/hooks/use-document";
 
 export type TreeItemProps = {
-  item: DocumentListItem;
-  docs: DocumentListItem[];
+  item: DocumentListItemDto;
+  docs: DocumentListItemDto[];
   selectedDocumentId: string;
   renamingDocumentId: string | null;
   setRenamingDocumentId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -54,7 +54,7 @@ export default function TreeItem({
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument(item.id);
 
-  const documentName = item.title.trim() ? item.title : "New Page";
+  const documentName = item.title.trim() ? item.title : "Untitled";
   const [draftTitle, setDraftTitle] = useState(documentName);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -133,10 +133,10 @@ export default function TreeItem({
                       ></input>
                     </div>
                   ) : (
-                    <Link href={`/d/${item.id}`}>
-                      <FileIcon />
-                      {documentName}
-                      <div className="relative flex ml-auto gap-2">
+                    <Link href={`/d/${item.id}`} className="flex items-center w-full min-w-0">
+                      <FileIcon className="shrink-0 mr-2" />
+                      <span className="truncate flex-1">{documentName}</span>
+                      <div className="relative flex ml-auto gap-2 shrink-0">
                         <ChevronRightIcon
                           className={cn(
                             "group-hover/item:hidden absolute right-0 transition-transform",
@@ -247,10 +247,10 @@ export default function TreeItem({
               ></input>
             </div>
           ) : (
-            <Link href={`/d/${item.id}`}>
-              <FileIcon />
-              {documentName}
-              <div className="flex ml-auto gap-2 invisible group-hover/item:visible">
+            <Link href={`/d/${item.id}`} className="flex items-center w-full min-w-0">
+              <FileIcon className="shrink-0 mr-2" />
+              <span className="truncate flex-1">{documentName}</span>
+              <div className="flex ml-auto gap-2 invisible group-hover/item:visible shrink-0">
                 <DropdownMenuEllipsis
                   document={item}
                   onRename={() => setRenamingDocumentId(item.id)}

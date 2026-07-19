@@ -10,16 +10,15 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { Fragment } from "react";
+import { Fragment, useRef, useEffect, useState, useMemo } from "react";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { useDocumentStore } from "@/stores/document-store";
-import type { Document, DocumentListItem } from "@/features/documents";
-import { useRef, useEffect, useState, useMemo } from "react";
+import type { DocumentListItemDto } from "@/features/documents";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useGetDocuments, useGetDocument, useUpdateDocument } from "@/hooks/use-document";
 import debounce from "lodash/debounce";
+import { DocumentSkeleton } from "@/components/skeleton/document-skeleton";
 
 export default function DocumentView() {
   const router = useRouter();
@@ -29,28 +28,11 @@ export default function DocumentView() {
   const selectedDocumentId = params.documentId;
   const { data: documents = [], isLoading: isListLoading } = useGetDocuments();
   const { data: selectedDocument, isLoading: isDocLoading } = useGetDocument(selectedDocumentId);
-  const updateDocument = useUpdateDocument(selectedDocumentId);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const [title, setTitle] = useState("");
 
   useEffect(() => {
-    setTitle(selectedDocument?.title ?? "");
-  }, [selectedDocument?.id, selectedDocument?.title]);
-
-  const debouncedSaveTitle = useMemo(
-    () =>
-      debounce((newTitle: string) => {
-        updateDocument.mutate({ title: newTitle });
-      }, 500),
-    [updateDocument],
-  );
-
-  useEffect(() => {
-    return () => {
-      debouncedSaveTitle.cancel();
-    };
-  }, [debouncedSaveTitle]);
+    if (!selectedDocumentId) return;
+    document.cookie = `liveleaf_last_doc=${selectedDocumentId}; path=/; max-age=2592000; SameSite=Lax`;
+  }, [selectedDocumentId]);
 
   const breadcrumb = selectedDocument
     ? getBreadCrumbs(documents, selectedDocumentId)
@@ -67,14 +49,9 @@ export default function DocumentView() {
     }
   }, [selectedDocument, documents, isListLoading, isDocLoading, router]);
 
-  useEffect(() => {
-    const textarea = textareaRef.current;
-
-    if (!textarea) return;
-
-    textarea.style.height = "auto";
-    textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [selectedDocument?.title]);
+  if (isDocLoading) {
+    return <DocumentSkeleton />;
+  }
 
   if (!selectedDocument) {
     return null;
@@ -95,12 +72,12 @@ export default function DocumentView() {
                 <BreadcrumbItem className="hidden md:block">
                   {index === breadcrumb.length - 1 ? (
                     <BreadcrumbPage>
-                      {doc.title.trim() ? doc.title : "New Page"}
+                      {doc.title.trim() ? doc.title : "Untitled"}
                     </BreadcrumbPage>
                   ) : (
                     <BreadcrumbLink asChild>
                       <Link href={`/d/${doc.id}`}>
-                        {doc.title.trim() ? doc.title : "New Page"}
+                        {doc.title.trim() ? doc.title : "Untitled"}
                       </Link>
                     </BreadcrumbLink>
                   )}
@@ -113,25 +90,17 @@ export default function DocumentView() {
       </header>
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-3xl px-8 py-16">
-          <textarea
-            placeholder="New Page"
-            rows={1}
-            ref={textareaRef}
-            className="w-full font-bold text-4xl tracking-tight mb-2 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/40"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              debouncedSaveTitle(e.target.value);
-            }}
+          <TitleEditor
+            key={selectedDocument.id}
+            documentId={selectedDocument.id}
+            initialTitle={selectedDocument.title ?? ""}
           />
           <div className="text-base leading-relaxed">
-            {selectedDocument ? (
-              <Tiptap
-                key={selectedDocument.id}
-                document={selectedDocument}
-                content={selectedDocument.content}
-              />
-            ) : null}
+            <Tiptap
+              key={selectedDocument.id}
+              document={selectedDocument}
+              content={selectedDocument.content}
+            />
           </div>
         </div>
       </div>
@@ -139,11 +108,59 @@ export default function DocumentView() {
   );
 }
 
+function TitleEditor({
+  documentId,
+  initialTitle,
+}: {
+  documentId: string;
+  initialTitle: string;
+}) {
+  const updateDocument = useUpdateDocument(documentId);
+  const [title, setTitle] = useState(initialTitle);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const mutateRef = useRef(updateDocument.mutate);
+  mutateRef.current = updateDocument.mutate;
+
+  const debouncedSaveTitle = useMemo(
+    () =>
+      debounce((newTitle: string) => {
+        mutateRef.current({ title: newTitle });
+      }, 300),
+    [],
+  );
+
+  useEffect(() => {
+    return () => debouncedSaveTitle.cancel();
+  }, [debouncedSaveTitle]);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [title]);
+
+  return (
+    <textarea
+      placeholder="Untitled"
+      rows={1}
+      ref={textareaRef}
+      className="w-full font-bold text-4xl tracking-tight mb-2 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/40"
+      value={title}
+      onChange={(e) => {
+        setTitle(e.target.value);
+        debouncedSaveTitle(e.target.value);
+      }}
+    />
+  );
+}
+
 function getBreadCrumbs(
-  documents: DocumentListItem[],
+  documents: DocumentListItemDto[],
   selectedDocumentId: string,
-): DocumentListItem[] {
-  const breadCrumb: DocumentListItem[] = [];
+): DocumentListItemDto[] {
+  const breadCrumb: DocumentListItemDto[] = [];
   let current = documents.find((doc) => doc.id === selectedDocumentId);
 
   while (current) {
