@@ -78,7 +78,7 @@ export async function findTrashDocuments(ownerId: string): Promise<TrashDocument
     d."archivedAt",
     d.position,
     ARRAY[d.id]::text[] AS "pathIds",
-    ARRAY[COALESCE(NULLIF(d.title, ''), 'Untitled')]::text[] AS "pathTitles"
+    ARRAY[COALESCE(NULLIF(d.title, ''), 'New Page')]::text[] AS "pathTitles"
   FROM "Document" d
   WHERE d."ownerId" = ${ownerId}
     AND d."parentId" IS NULL
@@ -93,7 +93,7 @@ export async function findTrashDocuments(ownerId: string): Promise<TrashDocument
     d."archivedAt",
     d.position,
     t."pathIds" || d.id,
-    t."pathTitles" || COALESCE(NULLIF(d.title, ''), 'Untitled')
+    t."pathTitles" || COALESCE(NULLIF(d.title, ''), 'New Page')
   FROM "Document" d
   INNER JOIN document_tree t ON d."parentId" = t.id
   WHERE d."ownerId" = ${ownerId}

@@ -3,7 +3,6 @@ import type { DocumentListItemDto } from "@/features/documents"
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
   SidebarMenuButton,
@@ -22,7 +21,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { FileIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
-import { useRouter } from "next/navigation";
 import { useCreateDocument, useUpdateDocument } from "@/hooks/use-document";
 
 export type TreeItemProps = {
@@ -40,7 +38,7 @@ export default function TreeItem({
   renamingDocumentId,
   setRenamingDocumentId,
 }: TreeItemProps) {
-  const router = useRouter();
+
   const expandedDocumentIds = useDocumentStore(
     (state) => state.expandedDocumentIds,
   );
@@ -54,7 +52,7 @@ export default function TreeItem({
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument(item.id);
 
-  const documentName = item.title.trim() ? item.title : "Untitled";
+  const documentName = item.title.trim() ? item.title : "New Page";
   const [draftTitle, setDraftTitle] = useState(documentName);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -68,7 +66,7 @@ export default function TreeItem({
 
   const handleSave = () => {
     updateDocument.mutate({
-      title: draftTitle.trim() || "Untitled",
+      title: draftTitle.trim() || "New Page",
     });
 
     setRenamingDocumentId(null);

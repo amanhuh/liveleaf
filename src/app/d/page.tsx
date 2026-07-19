@@ -19,7 +19,7 @@ export default async function DashboardPage() {
     redirect(`/d/${documents[0].id}`);
   }
 
-  const defaultPage = await createDocument(session.user.id, { title: "Untitled", parentId: null });
+  const defaultPage = await createDocument(session.user.id, { title: "", parentId: null });
   if (defaultPage) {
     redirect(`/d/${defaultPage.id}`);
   }

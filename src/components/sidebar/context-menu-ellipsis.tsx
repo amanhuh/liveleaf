@@ -42,20 +42,15 @@ export function ContextMenuEllipsis({
   };
 
   const handleArchive = () => {
-    archiveDocument.mutate(undefined, {
-      onSuccess: () => {
-        if (!isCurrentDocument) {
-          return;
-        }
-
-        if (!fallbackDocumentId) {
-          createDocument.mutate({});
-          return;
-        }
-
+    if (isCurrentDocument) {
+      if (fallbackDocumentId) {
         router.push(`/d/${fallbackDocumentId}`);
+      } else {
+        createDocument.mutate({});
+        return;
       }
-    });
+    }
+    archiveDocument.mutate(undefined);
   };
 
   return (

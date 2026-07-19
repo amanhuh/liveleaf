@@ -101,7 +101,7 @@ function SidebarProvider({
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+        (event.key === SIDEBAR_KEYBOARD_SHORTCUT || event.key === "\\") &&
         (event.metaKey || event.ctrlKey)
       ) {
         event.preventDefault()
@@ -226,7 +226,7 @@ function Sidebar({
         className={cn(
           "relative w-(--sidebar-width) bg-transparent",
           !isResizing && "transition-[width] duration-200 ease-linear",
-          "group-data-[collapsible=icon]:w-0",
+          "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
             ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
@@ -285,7 +285,7 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-  const { isResizing, setIsResizing } = useSidebar()
+  const { isResizing, setIsResizing, toggleSidebar } = useSidebar()
   const sidebarWidth = useDocumentStore((state) => state.sidebarWidth)
   const setSidebarWidth = useDocumentStore((state) => state.setSidebarWidth)
 
@@ -294,6 +294,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
     setIsResizing(true);
     const startWidth = sidebarWidth;
     const startX = e.clientX;
+    const startTime = Date.now();
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
@@ -301,30 +302,69 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       setSidebarWidth(newWidth);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (upEvent: MouseEvent) => {
       setIsResizing(false);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+
+      const deltaX = Math.abs(upEvent.clientX - startX);
+      const timeElapsed = Date.now() - startTime;
+      if (deltaX < 3 && timeElapsed < 250) {
+        toggleSidebar();
+      }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   };
 
+  const isMac = typeof window !== "undefined" && navigator.userAgent.toLowerCase().includes("mac");
+
   return (
-    <button
-      data-sidebar="rail"
-      data-slot="sidebar-rail"
-      aria-label="Resize Sidebar"
-      tabIndex={-1}
-      onMouseDown={handleMouseDown}
-      title="Drag to resize"
-      className={cn(
-        "absolute inset-y-0 z-20 hidden w-2 hover:w-4 cursor-col-resize group-data-[side=left]:-right-2 group-data-[side=right]:left-0 sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
-        className
-      )}
-      {...props}
-    />
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          data-sidebar="rail"
+          data-slot="sidebar-rail"
+          aria-label="Resize Sidebar"
+          tabIndex={-1}
+          onMouseDown={handleMouseDown}
+          className={cn(
+            "absolute inset-y-0 z-20 hidden w-4 cursor-col-resize group-data-[side=left]:-right-2 group-data-[side=right]:-left-2 sm:flex items-center justify-center group/rail",
+            className
+          )}
+          {...props}
+        >
+          <div
+            className={cn(
+              "h-full w-[2px] bg-transparent transition-colors duration-75 group-hover/rail:bg-primary/30 active:bg-primary/30 group-active/rail:bg-primary/30",
+              isResizing && "bg-primary/30"
+            )}
+          />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="right"
+        align="center"
+        sideOffset={8}
+        className="flex flex-col items-start gap-1.5 p-2"
+      >
+        <div className="flex items-center gap-1.5 whitespace-nowrap">
+          <span className="font-semibold">Close</span>
+          <span className="opacity-70">Click or</span>
+          <kbd className="inline-flex h-5 select-none items-center gap-0.5 rounded border border-background/20 bg-background/10 px-1.5 font-mono text-[10px] font-medium">
+            {isMac ? "⌘" : "Ctrl"}
+          </kbd>
+          <kbd className="inline-flex h-5 select-none items-center gap-0.5 rounded border border-background/20 bg-background/10 px-1.5 font-mono text-[10px] font-medium">
+            \
+          </kbd>
+        </div>
+        <div className="flex items-center gap-1.5 whitespace-nowrap">
+          <span className="font-semibold">Resize</span>
+          <span className="opacity-70">Drag</span>
+        </div>
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

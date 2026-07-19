@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createDocumentSchema = z.object({
-  title: z.string().optional().default("Untitled"),
+  title: z.string().optional().default(""),
   parentId: z.string().cuid().nullable().optional().default(null),
 });
 

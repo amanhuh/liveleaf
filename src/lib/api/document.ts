@@ -1,4 +1,4 @@
-import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, UpdateDocumentPayload, CreateDocumentPayload, CreateDocumentInput } from "@/features/documents";
+import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, UpdateDocumentPayload, CreateDocumentInput } from "@/features/documents";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);

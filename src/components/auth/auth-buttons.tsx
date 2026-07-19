@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, Suspense } from "react";
+import { useTransition, Suspense } from "react";
 import { authClient } from "@/lib/auth/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";

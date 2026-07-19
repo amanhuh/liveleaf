@@ -8,7 +8,7 @@ import { createDocumentSchema } from "@/features/documents/validation";
 import { withApiHandler } from "@/lib/api/withApiHandler";
 import { HttpError } from "@/lib/errors";
 
-export const GET = withApiHandler(async (request: NextRequest) => {
+export const GET = withApiHandler(async () => {
   const session = await requireUser();
 
   const documents = await findActiveDocuments(session.user.id);

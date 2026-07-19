@@ -27,16 +27,14 @@ export default function Tiptap({ document, content }: TiptapProps) {
   const formattedToRef = useRef<number | null>(null);
 
   const updateDocument = useUpdateDocument(document.id);
-
-  const mutateRef = useRef(updateDocument.mutate);
-  mutateRef.current = updateDocument.mutate;
+  const { mutate } = updateDocument;
 
   const debouncedSave = useMemo(
     () =>
       debounce((jsonContent: JSONContent) => {
-        mutateRef.current({ content: jsonContent });
+        mutate({ content: jsonContent });
       }, 500),
-    [],
+    [mutate],
   );
 
   useEffect(() => {

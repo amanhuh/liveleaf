@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useGetDocuments, useGetDocument, useUpdateDocument } from "@/hooks/use-document";
 import debounce from "lodash/debounce";
 import { DocumentSkeleton } from "@/components/skeleton/document-skeleton";
+import { toast } from "sonner";
 
 export default function DocumentView() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function DocumentView() {
   }>();
   const selectedDocumentId = params.documentId;
   const { data: documents = [], isLoading: isListLoading } = useGetDocuments();
-  const { data: selectedDocument, isLoading: isDocLoading } = useGetDocument(selectedDocumentId);
+  const { data: selectedDocument, isLoading: isDocLoading, error: docError } = useGetDocument(selectedDocumentId);
 
   useEffect(() => {
     if (!selectedDocumentId) return;
@@ -41,13 +42,14 @@ export default function DocumentView() {
   useEffect(() => {
     if (isListLoading || isDocLoading) return;
     if (selectedDocument) return;
+    if (!docError) return;
 
-    if (documents.length > 0) {
-      router.replace(`/d/${documents[0].id}`);
-    } else {
-      router.replace("/");
-    }
-  }, [selectedDocument, documents, isListLoading, isDocLoading, router]);
+    toast.error("Page not found", {
+      description: "This page may have been deleted or moved.",
+      position: "bottom-right",
+    });
+    router.replace("/d");
+  }, [selectedDocument, docError, isListLoading, isDocLoading, router]);
 
   if (isDocLoading) {
     return <DocumentSkeleton />;
@@ -61,10 +63,6 @@ export default function DocumentView() {
     <SidebarInset>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4"
-        />
         <Breadcrumb>
           <BreadcrumbList>
             {breadcrumb.map((doc, index) => (
@@ -72,12 +70,16 @@ export default function DocumentView() {
                 <BreadcrumbItem className="hidden md:block">
                   {index === breadcrumb.length - 1 ? (
                     <BreadcrumbPage>
-                      {doc.title.trim() ? doc.title : "Untitled"}
+                      <span className="max-w-[120px] truncate block" title={doc.title}>
+                        {doc.title.trim() ? doc.title : "New Page"}
+                      </span>
                     </BreadcrumbPage>
                   ) : (
                     <BreadcrumbLink asChild>
                       <Link href={`/d/${doc.id}`}>
-                        {doc.title.trim() ? doc.title : "Untitled"}
+                        <span className="max-w-[120px] truncate block" title={doc.title}>
+                          {doc.title.trim() ? doc.title : "New Page"}
+                        </span>
                       </Link>
                     </BreadcrumbLink>
                   )}
@@ -116,18 +118,16 @@ function TitleEditor({
   initialTitle: string;
 }) {
   const updateDocument = useUpdateDocument(documentId);
+  const { mutate } = updateDocument;
   const [title, setTitle] = useState(initialTitle);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const mutateRef = useRef(updateDocument.mutate);
-  mutateRef.current = updateDocument.mutate;
 
   const debouncedSaveTitle = useMemo(
     () =>
       debounce((newTitle: string) => {
-        mutateRef.current({ title: newTitle });
+        mutate({ title: newTitle });
       }, 300),
-    [],
+    [mutate],
   );
 
   useEffect(() => {
@@ -143,7 +143,7 @@ function TitleEditor({
 
   return (
     <textarea
-      placeholder="Untitled"
+      placeholder="New Page"
       rows={1}
       ref={textareaRef}
       className="w-full font-bold text-4xl tracking-tight mb-2 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/40"

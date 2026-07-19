@@ -24,8 +24,8 @@ export default function AuthLayout({
 
           <blockquote className="auth-quote">
             <p>
-              "The best writing happens when ideas flow freely — without the
-              friction of formatting."
+              &ldquo;The best writing happens when ideas flow freely — without the
+              friction of formatting.&rdquo;
             </p>
             <footer>— The Liveleaf team</footer>
           </blockquote>

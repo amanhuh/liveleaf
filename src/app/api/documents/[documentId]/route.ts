@@ -1,11 +1,8 @@
-import type { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth/helper";
 import {
-  findDocument,
   findEditableDocument,
   updateDocument,
   deleteDocument,
-  DocumentListItem,
 } from "@/features/documents/repository";
 import { updateDocumentSchema } from "@/features/documents/validation";
 import { withApiHandler } from "@/lib/api/withApiHandler";
