@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import type { DocumentListItemDto } from "@/features/documents"
+import { useState, useRef } from "react";
+import type { DocumentListItemDto } from "@/features/documents";
 import {
   Collapsible,
   CollapsibleContent,
@@ -38,10 +38,7 @@ export default function TreeItem({
   renamingDocumentId,
   setRenamingDocumentId,
 }: TreeItemProps) {
-
-  const expandedDocumentIds = useDocumentStore(
-    (state) => state.expandedDocumentIds,
-  );
+  const expandedDocumentIds = useDocumentStore((state) => state.expandedDocumentIds);
   const isOpen = expandedDocumentIds.includes(item.id);
   const toggleExpanded = useDocumentStore((state) => state.toggleExpanded);
   const expandDocument = useDocumentStore((state) => state.expandDocument);
@@ -55,228 +52,75 @@ export default function TreeItem({
   const documentName = item.title.trim() ? item.title : "New Page";
   const [draftTitle, setDraftTitle] = useState(documentName);
   const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (renamingDocumentId === item.id) {
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-        inputRef.current?.select();
-      });
-    }
-  }, [renamingDocumentId, item.id]);
+
+  const isRenaming = renamingDocumentId === item.id;
 
   const handleSave = () => {
-    updateDocument.mutate({
-      title: draftTitle.trim() || "New Page",
-    });
-
+    updateDocument.mutate({ title: draftTitle.trim() || "New Page" });
     setRenamingDocumentId(null);
   };
+
   const handleCancel = () => {
     setDraftTitle(documentName);
     setRenamingDocumentId(null);
   };
 
-  if (hasChildren) {
-    return (
-      <SidebarMenuItem>
-        <Collapsible
-          className={"group/collapsible"}
-          open={isOpen}
-          onOpenChange={() => toggleExpanded(item.id)}
-        >
-          <ContextMenu>
-            <ContextMenuTrigger asChild>
-              <SidebarMenuButton
-                isActive={selectedDocumentId == item.id}
-                className={cn(
-                  "group/item data-[active=true]:bg-accent cursor-pointer",
-                  renamingDocumentId == item.id &&
-                    "bg-blue-600/15! border border-blue-600",
-                )}
-                asChild
-              >
-                {renamingDocumentId == item.id ? (
-                  <div className="p-2">
-                    <FileIcon />
-                    <input
-                      autoFocus
-                      className="
-                        bg-transparent
-                        border-none
-                        outline-none
-                        ring-0
-                        focus:outline-none
-                        focus:ring-0
-                        p-0
-                        m-0
-                      "
-                      ref={inputRef}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      value={draftTitle}
-                      onChange={(e) => {
-                        setDraftTitle(e.target.value);
-                      }}
-                      onBlur={handleSave}
-                      onKeyDown={(e) => {
-                        if (e.key == "Enter") {
-                          handleSave();
-                        } else if (e.key == "Escape") {
-                          handleCancel();
-                        }
-                      }}
-                    ></input>
-                  </div>
-                ) : (
-                  <Link href={`/d/${item.id}`} className="flex items-center w-full min-w-0">
-                    <div className="relative size-4 mr-2 shrink-0 flex items-center justify-center">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          toggleExpanded(item.id);
-                        }}
-                        className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/item:opacity-100 border border-transparent hover:border-border/40 hover:bg-sidebar-accent rounded-sm cursor-pointer z-10"
-                      >
-                        <ChevronRightIcon
-                          className={cn(
-                            "size-3.5 text-foreground",
-                            isOpen && "rotate-90"
-                          )}
-                        />
-                      </button>
-                      <FileIcon className="size-4 group-hover/item:opacity-0" />
-                    </div>
-                    <span className="truncate flex-1">{documentName}</span>
-                    <div className="relative flex ml-auto gap-1 shrink-0 invisible group-hover/item:visible">
-                      <div className="p-0.5 border border-transparent hover:border-border/40 hover:bg-sidebar-accent rounded-sm cursor-pointer flex items-center justify-center text-foreground">
-                        <DropdownMenuEllipsis
-                          document={item}
-                          onRename={() => setRenamingDocumentId(item.id)}
-                        />
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger className="cursor-pointer" asChild>
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              createDocument.mutate({ parentId: item.id });
-                              expandDocument(item.id);
-                            }}
-                            className="p-0.5 border border-transparent hover:border-border/40 hover:bg-sidebar-accent rounded-sm cursor-pointer flex items-center justify-center text-foreground"
-                          >
-                            <PlusIcon className="size-3.5" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          <p>Add a page</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </Link>
-                )}
-              </SidebarMenuButton>
-            </ContextMenuTrigger>
-            <ContextMenuEllipsis
-              document={item}
-              onRename={() => setRenamingDocumentId(item.id)}
-            />
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                {children.map((child) => (
-                  <TreeItem
-                    key={child.id}
-                    selectedDocumentId={selectedDocumentId}
-                    item={child}
-                    docs={docs}
-                    renamingDocumentId={renamingDocumentId}
-                    setRenamingDocumentId={setRenamingDocumentId}
-                  />
-                ))}
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </ContextMenu>
-        </Collapsible>
-      </SidebarMenuItem>
-    );
-  }
+  const buttonContent = isRenaming ? (
+    <div className="p-2">
+      <FileIcon />
+      <input
+        autoFocus
+        ref={inputRef}
+        className="bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 p-0 m-0"
+        value={draftTitle}
+        onChange={(e) => setDraftTitle(e.target.value)}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        onBlur={handleSave}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSave();
+          else if (e.key === "Escape") handleCancel();
+        }}
+      />
+    </div>
+  ) : (
+    <Link href={`/d/${item.id}`} className="flex items-center w-full min-w-0">
+      <div className="relative size-4 mr-2 shrink-0 flex items-center justify-center">
+        {hasChildren && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleExpanded(item.id);
+            }}
+            className="absolute -inset-[2px] flex items-center justify-center opacity-0 group-hover/item:opacity-100 border border-transparent hover:border-border/40 hover:bg-sidebar-foreground/10 rounded-sm cursor-pointer z-10"
+          >
+            <ChevronRightIcon className={cn("size-3.5 text-foreground", isOpen && "rotate-90")} />
+          </button>
+        )}
+        <FileIcon className={cn("size-4", hasChildren && "group-hover/item:opacity-0")} />
+      </div>
+      <span className="truncate flex-1">{documentName}</span>
+      <ActionButtons
+        item={item}
+        setRenamingDocumentId={setRenamingDocumentId}
+        createDocument={createDocument}
+        expandDocument={expandDocument}
+      />
+    </Link>
+  );
 
-  return (
+  const menuButton = (
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <SidebarMenuButton
-          isActive={selectedDocumentId == item.id}
+          isActive={selectedDocumentId === item.id}
           className={cn(
             "group/item data-[active=true]:bg-accent cursor-pointer",
-            renamingDocumentId == item.id &&
-              "bg-blue-600/15! border border-blue-600",
+            isRenaming && "bg-blue-600/15! border border-blue-600",
           )}
           asChild
         >
-          {renamingDocumentId == item.id ? (
-            <div className="p-2">
-              <FileIcon />
-              <input
-                autoFocus
-                className="
-                  bg-transparent
-                  border-none
-                  outline-none
-                  ring-0
-                  focus:outline-none
-                  focus:ring-0
-                  p-0
-                  m-0
-                "
-                ref={inputRef}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                value={draftTitle}
-                onChange={(e) => {
-                  setDraftTitle(e.target.value);
-                }}
-                onBlur={handleSave}
-                onKeyDown={(e) => {
-                  if (e.key == "Enter") {
-                    handleSave();
-                  } else if (e.key == "Escape") {
-                    handleCancel();
-                  }
-                }}
-              ></input>
-            </div>
-          ) : (
-            <Link href={`/d/${item.id}`} className="flex items-center w-full min-w-0">
-              <FileIcon className="shrink-0 mr-2" />
-              <span className="truncate flex-1">{documentName}</span>
-              <div className="flex ml-auto gap-2 invisible group-hover/item:visible shrink-0">
-                <DropdownMenuEllipsis
-                  document={item}
-                  onRename={() => setRenamingDocumentId(item.id)}
-                />
-                <Tooltip>
-                  <TooltipTrigger className="cursor-pointer" asChild>
-                    <PlusIcon
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        createDocument.mutate({ parentId: item.id });
-                        expandDocument(item.id);
-                      }}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Add a page</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </Link>
-          )}
+          {buttonContent}
         </SidebarMenuButton>
       </ContextMenuTrigger>
       <ContextMenuEllipsis
@@ -284,5 +128,76 @@ export default function TreeItem({
         onRename={() => setRenamingDocumentId(item.id)}
       />
     </ContextMenu>
+  );
+
+  return (
+    <SidebarMenuItem>
+      {hasChildren ? (
+        <Collapsible
+          className="group/collapsible"
+          open={isOpen}
+          onOpenChange={() => toggleExpanded(item.id)}
+        >
+          {menuButton}
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              {children.map((child) => (
+                <TreeItem
+                  key={child.id}
+                  selectedDocumentId={selectedDocumentId}
+                  item={child}
+                  docs={docs}
+                  renamingDocumentId={renamingDocumentId}
+                  setRenamingDocumentId={setRenamingDocumentId}
+                />
+              ))}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </Collapsible>
+      ) : (
+        menuButton
+      )}
+    </SidebarMenuItem>
+  );
+}
+
+function ActionButtons({
+  item,
+  setRenamingDocumentId,
+  createDocument,
+  expandDocument,
+}: {
+  item: DocumentListItemDto;
+  setRenamingDocumentId: (id: string | null) => void;
+  createDocument: ReturnType<typeof useCreateDocument>;
+  expandDocument: (id: string) => void;
+}) {
+  return (
+    <div className="relative flex ml-auto gap-1 shrink-0 invisible group-hover/item:visible">
+      <div className="size-[20px] border border-transparent hover:border-border/40 hover:bg-sidebar-foreground/10 rounded-sm cursor-pointer flex items-center justify-center text-foreground">
+        <DropdownMenuEllipsis
+          document={item}
+          onRename={() => setRenamingDocumentId(item.id)}
+        />
+      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              createDocument.mutate({ parentId: item.id });
+              expandDocument(item.id);
+            }}
+            className="size-[20px] border border-transparent hover:border-border/40 hover:bg-sidebar-foreground/10 rounded-sm cursor-pointer flex items-center justify-center text-foreground"
+          >
+            <PlusIcon className="size-3.5" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>Add a page</p>
+        </TooltipContent>
+      </Tooltip>
+    </div>
   );
 }

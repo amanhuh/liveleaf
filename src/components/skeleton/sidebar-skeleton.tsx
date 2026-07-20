@@ -23,7 +23,7 @@ export function SidebarSkeleton({ count = 3 }: { count?: number }) {
       ))}
     </div>
   );
-}
+};
 
 export function SidebarFooterSkeleton() {
   return (
@@ -35,4 +35,4 @@ export function SidebarFooterSkeleton() {
       </div>
     </div>
   );
-}
+};
