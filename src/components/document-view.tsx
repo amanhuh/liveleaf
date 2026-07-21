@@ -16,10 +16,11 @@ import type { DocumentListItemDto } from "@/features/documents";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useGetDocuments, useGetDocument, useUpdateDocument } from "@/hooks/use-document";
+import { useGetDocuments, useGetDocument, useUpdateDocument, useArchiveDocument } from "@/hooks/use-document";
 import debounce from "lodash/debounce";
 import { DocumentSkeleton } from "@/components/skeleton/document-skeleton";
 import { toast } from "sonner";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 export default function DocumentView() {
   const router = useRouter();
@@ -29,6 +30,24 @@ export default function DocumentView() {
   const selectedDocumentId = params.documentId;
   const { data: documents = [], isLoading: isListLoading } = useGetDocuments();
   const { data: selectedDocument, isLoading: isDocLoading, error: docError } = useGetDocument(selectedDocumentId);
+  const archiveDocument = useArchiveDocument(selectedDocumentId);
+  const titleInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useKeyboardShortcuts({
+    onMoveToTrash: () => {
+      if (!selectedDocumentId) return;
+      archiveDocument.mutate(undefined, {
+        onSuccess: () => {
+          toast.success("Page moved to trash");
+          router.push("/d");
+        },
+      });
+    },
+    onRename: () => {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
+    },
+  });
 
   useEffect(() => {
     if (!selectedDocumentId) return;
@@ -96,6 +115,7 @@ export default function DocumentView() {
             key={selectedDocument.id}
             documentId={selectedDocument.id}
             initialTitle={selectedDocument.title ?? ""}
+            inputRef={titleInputRef}
           />
           <div className="text-base leading-relaxed">
             <Tiptap
@@ -113,14 +133,17 @@ export default function DocumentView() {
 function TitleEditor({
   documentId,
   initialTitle,
+  inputRef,
 }: {
   documentId: string;
   initialTitle: string;
+  inputRef?: React.RefObject<HTMLTextAreaElement | null>;
 }) {
   const updateDocument = useUpdateDocument(documentId);
   const { mutate } = updateDocument;
   const [title, setTitle] = useState(initialTitle);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const localRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = inputRef || localRef;
 
   const debouncedSaveTitle = useMemo(
     () =>

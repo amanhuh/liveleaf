@@ -22,6 +22,8 @@ import { useGetDocuments, useCreateDocument } from "@/hooks/use-document";
 import { SidebarSkeleton } from "@/components/skeleton/sidebar-skeleton";
 import { authClient } from "@/lib/auth/auth-client";
 import { useDocumentStore } from "@/stores/document-store";
+import { TrashModal } from "@/components/modals/trash-modal";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +40,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const createDocument = useCreateDocument();
   const { data: session, isPending: isSessionLoading } = authClient.useSession();
   const [renamingDocumentId, setRenamingDocumentId] = useState<string | null>(null);
+  const [isTrashOpen, setIsTrashOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onNewPage: () => createDocument.mutate({}),
+  });
 
   const lastDocumentCount = useDocumentStore((state) => state.lastDocumentCount);
   const setLastDocumentCount = useDocumentStore((state) => state.setLastDocumentCount);
@@ -150,10 +157,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="relative border-t border-sidebar-border/40 bg-sidebar/80 backdrop-blur-md">
+        <div className="pointer-events-none absolute -top-6 left-0 right-0 h-6 bg-gradient-to-t from-sidebar via-sidebar/80 to-transparent" />
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="cursor-pointer">
+            <SidebarMenuButton className="cursor-pointer" onClick={() => setIsTrashOpen(true)}>
               <Trash2 className="size-4" />
               <span>Trash</span>
             </SidebarMenuButton>
@@ -173,6 +181,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarFooter>
       <SidebarRail />
+      <TrashModal open={isTrashOpen} onOpenChange={setIsTrashOpen} />
     </Sidebar>
   );
 }
