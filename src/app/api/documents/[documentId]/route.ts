@@ -11,7 +11,11 @@ import { HttpError } from "@/lib/errors";
 export const GET = withApiHandler<{ documentId: string }>(async (req, params) => {
   const { documentId } = params;
   const session = await requireUser();
+  console.log("session", session.user.id);
+
   const document = await findEditableDocument(documentId, session.user.id);
+
+  console.log("document", document);
   if (!document) throw new HttpError("Document not found", 404);
   return Response.json(document);
 });

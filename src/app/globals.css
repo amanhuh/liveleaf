@@ -139,13 +139,26 @@
 
 /* Editor prose refinements */
 .prose h1 {
+  font-size: 1.75em;
   font-weight: 700;
   letter-spacing: -0.025em;
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
 }
 
 .prose h2 {
+  font-size: 1.35em;
   font-weight: 600;
   letter-spacing: -0.015em;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+}
+
+.prose h3 {
+  font-size: 1.15em;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.3em;
 }
 
 .prose p {

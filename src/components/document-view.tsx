@@ -146,7 +146,7 @@ function TitleEditor({
       placeholder="New Page"
       rows={1}
       ref={textareaRef}
-      className="w-full font-bold text-4xl tracking-tight mb-2 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/40"
+      className="w-full font-bold text-5xl tracking-tight mb-2 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/40"
       value={title}
       onChange={(e) => {
         setTitle(e.target.value);

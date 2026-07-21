@@ -13,8 +13,9 @@ import {
   SidebarHeader,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
-import { PlusIcon, LogOut, ChevronDown, User } from "lucide-react";
+import { PlusIcon, LogOut, ChevronDown, User, Trash2, Settings, Leaf } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import TreeItem from "./tree-item";
 import { useGetDocuments, useCreateDocument } from "@/hooks/use-document";
@@ -149,6 +150,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton className="cursor-pointer">
+              <Trash2 className="size-4" />
+              <span>Trash</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton className="cursor-pointer">
+              <Settings className="size-4" />
+              <span>Settings</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <div className="flex items-center gap-2 px-2 py-2 text-xs font-medium border-t border-sidebar-border/60 mt-1 text-muted-foreground">
+          <div className="flex size-5 items-center justify-center rounded bg-primary/10 text-primary">
+            <Leaf className="size-3.5" />
+          </div>
+          <span className="font-semibold tracking-tight text-foreground/80">LiveLeaf</span>
+        </div>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
