@@ -15,7 +15,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { PlusIcon, LogOut, ChevronDown, User, Trash2, Settings, Leaf } from "lucide-react";
+import { PlusIcon, LogOut, ChevronDown, User, Trash2, Settings, Leaf, Search } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import TreeItem from "./tree-item";
 import { useGetDocuments, useCreateDocument } from "@/hooks/use-document";
@@ -160,6 +160,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter className="relative border-t border-sidebar-border/40 bg-sidebar/80 backdrop-blur-md">
         <div className="pointer-events-none absolute -top-6 left-0 right-0 h-6 bg-gradient-to-t from-sidebar via-sidebar/80 to-transparent" />
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton className="cursor-pointer">
+              <Search className="size-4" />
+              <span>Search</span>
+              <kbd className="ml-auto text-[10px] font-mono opacity-60">⌘K</kbd>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton className="cursor-pointer" onClick={() => setIsTrashOpen(true)}>
               <Trash2 className="size-4" />
