@@ -31,8 +31,8 @@ export default function Tiptap({ document, content }: TiptapProps) {
 
   const debouncedSave = useMemo(
     () =>
-      debounce((jsonContent: JSONContent) => {
-        mutate({ content: jsonContent });
+      debounce((jsonContent: JSONContent, textContent: string) => {
+        mutate({ content: jsonContent, plainText: textContent });
       }, 500),
     [mutate],
   );
@@ -58,7 +58,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
     ],
     content,
     onUpdate: ({ editor }) => {
-      debouncedSave(editor.getJSON());
+      debouncedSave(editor.getJSON(), editor.getText());
     },
     onSelectionUpdate: ({ editor }) => {
       const { selection } = editor.state;
