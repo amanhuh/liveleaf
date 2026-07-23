@@ -19,7 +19,7 @@ export function useGetDocument(docId: string) {
 }
 
 export function useGetTrashDocuments() {
-    return useQuery({
+    return useQuery<TrashDocumentTreeItemDto[]>({
         queryKey: ['documents', 'trash'],
         queryFn: () => api.documents.getTrash(),
     });
