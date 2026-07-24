@@ -6,12 +6,14 @@ interface ShortcutHandlers {
   onNewPage?: () => void;
   onMoveToTrash?: () => void;
   onRename?: () => void;
+  onSearch?: () => void;
 }
 
 export function useKeyboardShortcuts({
   onNewPage,
   onMoveToTrash,
   onRename,
+  onSearch,
 }: ShortcutHandlers) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -25,6 +27,14 @@ export function useKeyboardShortcuts({
         activeElement?.tagName === "INPUT" ||
         activeElement?.tagName === "TEXTAREA" ||
         activeElement?.getAttribute("contenteditable") === "true";
+
+      if ((e.key.toLowerCase() === "k" || e.key.toLowerCase() === "p") && !e.shiftKey && !e.altKey) {
+        if (onSearch) {
+          e.preventDefault();
+          onSearch();
+          return;
+        }
+      }
 
       if (e.key.toLowerCase() === "n" && !e.shiftKey && !e.altKey) {
         e.preventDefault();
@@ -51,5 +61,5 @@ export function useKeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onNewPage, onMoveToTrash, onRename]);
+  }, [onNewPage, onMoveToTrash, onRename, onSearch]);
 }

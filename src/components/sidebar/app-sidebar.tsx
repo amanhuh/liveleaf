@@ -23,6 +23,7 @@ import { SidebarSkeleton } from "@/components/skeleton/sidebar-skeleton";
 import { authClient } from "@/lib/auth/auth-client";
 import { useDocumentStore } from "@/stores/document-store";
 import { TrashModal } from "@/components/modals/trash-modal";
+import { SearchCommand } from "@/components/modals/search-command";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   DropdownMenu,
@@ -41,9 +42,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session, isPending: isSessionLoading } = authClient.useSession();
   const [renamingDocumentId, setRenamingDocumentId] = useState<string | null>(null);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useKeyboardShortcuts({
     onNewPage: () => createDocument.mutate({}),
+    onSearch: () => setIsSearchOpen(true),
   });
 
   const lastDocumentCount = useDocumentStore((state) => state.lastDocumentCount);
@@ -161,7 +164,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="pointer-events-none absolute -top-6 left-0 right-0 h-6 bg-gradient-to-t from-sidebar via-sidebar/80 to-transparent" />
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="cursor-pointer">
+            <SidebarMenuButton className="cursor-pointer" onClick={() => setIsSearchOpen(true)}>
               <Search className="size-4" />
               <span>Search</span>
               <kbd className="ml-auto text-[10px] font-mono opacity-60">⌘K</kbd>
@@ -189,6 +192,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
       <TrashModal open={isTrashOpen} onOpenChange={setIsTrashOpen} />
+      <SearchCommand open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </Sidebar>
   );
 }

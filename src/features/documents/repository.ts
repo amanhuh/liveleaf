@@ -5,7 +5,7 @@ import { HttpError } from "@/lib/errors";
 
 export async function createDocument(ownerId: string, data: CreateDocumentPayload) {
   if (data.parentId) {
-    const parent = await findDocument(data.parentId, ownerId);
+    const parent = await findEditableDocument(data.parentId, ownerId);
     if (!parent) return null;
   }
 
@@ -294,4 +294,113 @@ export async function deleteDocument(id: string, ownerId: string) {
   return await prisma.document.delete({
     where: { id },
   });
+}
+
+export interface SearchDocumentItem {
+  id: string;
+  title: string | null;
+  parentId: string | null;
+  icon: string | null;
+  updatedAt: Date;
+  rank: number;
+  pathIds: string[];
+  pathTitles: string[];
+}
+
+export async function searchActiveDocuments(
+  ownerId: string,
+  query: string,
+  limit: number = 20
+): Promise<SearchDocumentItem[]> {
+  if (!query) return [];
+
+  return await prisma.$queryRaw<SearchDocumentItem[]>`
+    WITH RECURSIVE search_input AS (
+      SELECT websearch_to_tsquery('english', ${query}) AS tsq
+    ),
+
+    matched_docs AS (
+      SELECT
+        d.id,
+        d."parentId",
+        d.title,
+        d.icon,
+        d."updatedAt",
+        ts_rank_cd(d."searchVector", search_input.tsq) AS rank
+      FROM "Document" d
+      CROSS JOIN search_input
+      WHERE d."ownerId" = ${ownerId}
+        AND d."archivedAt" IS NULL
+        AND d."searchVector" @@ search_input.tsq
+    ),
+
+    ancestors AS (
+      SELECT
+        m.id AS "matchId",
+        d.id,
+        d."parentId",
+        d.title,
+        d."archivedAt",
+        0 AS depth
+      FROM matched_docs m
+      INNER JOIN "Document" d ON d.id = m.id
+
+      UNION ALL
+
+      SELECT
+        a."matchId",
+        parent.id,
+        parent."parentId",
+        parent.title,
+        parent."archivedAt",
+        a.depth + 1
+      FROM ancestors a
+      INNER JOIN "Document" parent ON parent.id = a."parentId"
+      WHERE a."parentId" IS NOT NULL
+    ),
+
+    valid_matches AS (
+      SELECT
+        m.id,
+        m."parentId",
+        m.title,
+        m.icon,
+        m."updatedAt",
+        m.rank
+      FROM matched_docs m
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM ancestors a
+        WHERE a."matchId" = m.id
+          AND a.depth > 0
+          AND a."archivedAt" IS NOT NULL
+      )
+    ),
+
+    paths AS (
+      SELECT
+        a."matchId",
+        ARRAY_AGG(a.id ORDER BY a.depth DESC) AS "pathIds",
+        ARRAY_AGG(COALESCE(NULLIF(a.title, ''), 'New Page') ORDER BY a.depth DESC) AS "pathTitles"
+      FROM ancestors a
+      INNER JOIN valid_matches vm ON vm.id = a."matchId"
+      GROUP BY a."matchId"
+    )
+
+    SELECT
+      vm.id,
+      vm.title,
+      vm."parentId",
+      vm.icon,
+      vm."updatedAt",
+      vm.rank,
+      p."pathIds",
+      p."pathTitles"
+    FROM valid_matches vm
+    INNER JOIN paths p ON p."matchId" = vm.id
+    ORDER BY
+      vm.rank DESC,
+      vm."updatedAt" DESC
+    LIMIT ${limit};
+  `;
 }

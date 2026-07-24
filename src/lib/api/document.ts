@@ -1,4 +1,4 @@
-import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, UpdateDocumentPayload, CreateDocumentInput } from "@/features/documents";
+import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, SearchDocumentItemDto, UpdateDocumentPayload, CreateDocumentInput } from "@/features/documents";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
@@ -12,6 +12,9 @@ export const documents = {
   get: (id: string): Promise<DocumentDto> => request(`/api/documents/${id}`),
 
   getTrash: (): Promise<TrashDocumentTreeItemDto[]> => request('/api/documents/trash'),
+
+  search: (q: string, signal?: AbortSignal, limit: number = 20): Promise<SearchDocumentItemDto[]> =>
+    request(`/api/documents/search?q=${encodeURIComponent(q)}&limit=${limit}`, { signal }),
 
   create: (payload: CreateDocumentInput): Promise<DocumentDto> =>
     request('/api/documents', {

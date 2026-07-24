@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, UpdateDocumentPayload, CreateDocumentInput } from "@/features/documents";
+import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, SearchDocumentItemDto, UpdateDocumentPayload, CreateDocumentInput } from "@/features/documents";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
@@ -23,6 +23,15 @@ export function useGetTrashDocuments() {
         queryKey: ['documents', 'trash'],
         queryFn: () => api.documents.getTrash(),
     });
+}
+
+export function useSearchDocuments(query: string, limit: number = 20) {
+  return useQuery<SearchDocumentItemDto[]>({
+    queryKey: ["documents", "search", query, limit],
+    queryFn: ({ signal }) => api.documents.search(query, signal, limit),
+    enabled: query.trim().length > 0,
+    staleTime: 0,
+  });
 }
 
 function removeDocumentSubtree(docs: DocumentListItemDto[], rootId: string): DocumentListItemDto[] {
