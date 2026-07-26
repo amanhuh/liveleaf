@@ -19,6 +19,19 @@ interface SearchCommandProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function renderSnippet(snippet: string) {
+  const parts = snippet.split(/<<|>>/);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="font-semibold text-foreground">
+        {part}
+      </strong>
+    ) : (
+      part
+    ),
+  );
+}
+
 export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const router = useRouter();
   const [input, setInput] = useState("");
@@ -75,28 +88,38 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         )}
         {results.length > 0 && (
           <CommandGroup heading="Documents">
-            {results.map((doc) => (
-              <CommandItem
-                key={doc.id}
-                value={doc.id}
-                onSelect={() => handleSelect(doc.id)}
-                className="cursor-pointer py-2"
-              >
-                <span className="text-base mr-1.5 shrink-0">
-                  {doc.icon || <FileText className="size-4 text-muted-foreground" />}
-                </span>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="font-medium truncate text-foreground">
-                    {doc.title?.trim() ? doc.title : "New Page"}
+            {results.map((doc) => {
+              const bodySnippet =
+                doc.snippet && doc.snippet.includes("<<") ? doc.snippet : null;
+
+              return (
+                <CommandItem
+                  key={doc.id}
+                  value={doc.id}
+                  onSelect={() => handleSelect(doc.id)}
+                  className="cursor-pointer py-2"
+                >
+                  <span className="text-base mr-1.5 shrink-0">
+                    {doc.icon || <FileText className="size-4 text-muted-foreground" />}
                   </span>
-                  {doc.pathTitles && doc.pathTitles.length > 1 && (
-                    <span className="text-[11px] text-muted-foreground truncate">
-                      {doc.pathTitles.join(" / ")}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="font-medium truncate text-foreground">
+                      {doc.title?.trim() ? doc.title : "New Page"}
                     </span>
-                  )}
-                </div>
-              </CommandItem>
-            ))}
+                    {doc.pathTitles && doc.pathTitles.length > 1 && (
+                      <span className="text-[11px] text-muted-foreground truncate">
+                        {doc.pathTitles.join(" / ")}
+                      </span>
+                    )}
+                    {bodySnippet && (
+                      <span className="text-[11px] text-muted-foreground truncate mt-0.5">
+                        {renderSnippet(bodySnippet)}
+                      </span>
+                    )}
+                  </div>
+                </CommandItem>
+              );
+            })}
           </CommandGroup>
         )}
       </CommandList>

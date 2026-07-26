@@ -4,7 +4,8 @@ import { requireUser } from "@/lib/auth/helper";
 import { findActiveDocuments, createDocument } from "@/features/documents/repository";
 
 export default async function DashboardPage() {
-  const session = await requireUser();
+  const session = await requireUser({ redirectTo: "/sign-in" });
+
   const documents = await findActiveDocuments(session.user.id);
 
   const cookieStore = await cookies();

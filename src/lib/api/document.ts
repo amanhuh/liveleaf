@@ -1,8 +1,12 @@
 import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, SearchDocumentItemDto, UpdateDocumentPayload, CreateDocumentInput } from "@/features/documents";
+import { HttpError } from "@/lib/errors";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
-  if (!res.ok) throw new Error(`API error ${res.status}: ${url}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new HttpError(errorData.error || `API error ${res.status}: ${url}`, res.status);
+  }
   return res.json();
 }
 

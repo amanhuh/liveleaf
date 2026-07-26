@@ -1,8 +1,9 @@
 import type { Document as PrismaDocument } from "@/generated/prisma/client";
 import type { JSONContent } from "@tiptap/core";
 
-import type { DocumentListItem, TrashDocumentTreeItem, SearchDocumentItem } from "./repository";
+import type { DocumentListItem, TrashDocumentTreeItem } from "./repository";
 export type { CreateDocumentPayload, UpdateDocumentPayload, CreateDocumentInput } from "./validation";
+export type { SearchDocumentItemDto } from "@/features/search";
 
 export type DocumentDto = Omit<
   PrismaDocument,
@@ -31,10 +32,4 @@ export type TrashDocumentTreeItemDto = Omit<
   updatedAt: string;
   archivedAt: string | null;
 };
-
-export type SearchDocumentItemDto = Omit<
-  SearchDocumentItem,
-  "updatedAt"
-> & {
-  updatedAt: string;
-};
+

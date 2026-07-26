@@ -14,6 +14,7 @@ export function useGetDocument(docId: string) {
     return useQuery<DocumentDto>({
         queryKey: ["documents", docId],
         queryFn: () => api.documents.get(docId),
+        enabled: !!docId,
         retry: false,
     });
 }

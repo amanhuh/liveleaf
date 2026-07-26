@@ -70,90 +70,89 @@ export interface TrashDocumentTreeItem {
 export async function findTrashDocuments(ownerId: string): Promise<TrashDocumentTreeItem[]> {
   return await prisma.$queryRaw<TrashDocumentTreeItem[]>`
     WITH RECURSIVE document_tree AS (
-  SELECT
-    d.id,
-    d."parentId",
-    d.title,
-    d."updatedAt",
-    d."archivedAt",
-    d.position,
-    ARRAY[d.id]::text[] AS "pathIds",
-    ARRAY[COALESCE(NULLIF(d.title, ''), 'New Page')]::text[] AS "pathTitles"
-  FROM "Document" d
-  WHERE d."ownerId" = ${ownerId}
-    AND d."parentId" IS NULL
+      SELECT
+        d.id,
+        d."parentId",
+        d.title,
+        d."updatedAt",
+        d."archivedAt",
+        d.position,
+        ARRAY[d.id]::text[] AS "pathIds",
+        ARRAY[COALESCE(NULLIF(d.title, ''), 'New Page')]::text[] AS "pathTitles"
+      FROM "Document" d
+      WHERE d."ownerId" = ${ownerId}
+        AND d."parentId" IS NULL
 
-  UNION ALL
+      UNION ALL
 
-  SELECT
-    d.id,
-    d."parentId",
-    d.title,
-    d."updatedAt",
-    d."archivedAt",
-    d.position,
-    t."pathIds" || d.id,
-    t."pathTitles" || COALESCE(NULLIF(d.title, ''), 'New Page')
-  FROM "Document" d
-  INNER JOIN document_tree t ON d."parentId" = t.id
-  WHERE d."ownerId" = ${ownerId}
-),
+      SELECT
+        d.id,
+        d."parentId",
+        d.title,
+        d."updatedAt",
+        d."archivedAt",
+        d.position,
+        t."pathIds" || d.id,
+        t."pathTitles" || COALESCE(NULLIF(d.title, ''), 'New Page')
+      FROM "Document" d
+        INNER JOIN document_tree t ON d."parentId" = t.id
+      WHERE d."ownerId" = ${ownerId}
+    ),
+    trash_tree AS (
+      SELECT
+        d.id AS "archiveActionId",
+        d.id,
+        d."parentId",
+        d.title,
+        d."updatedAt",
+        d."archivedAt",
+        d."archivedAt" AS "effectiveArchivedAt",
+        d.position,
+        d."pathIds",
+        d."pathTitles",
+        0::int AS "depthFromArchiveAction"
+      FROM document_tree d
+      WHERE d."archivedAt" IS NOT NULL
 
-trash_tree AS (
-  SELECT
-    d.id AS "archiveActionId",
-    d.id,
-    d."parentId",
-    d.title,
-    d."updatedAt",
-    d."archivedAt",
-    d."archivedAt" AS "effectiveArchivedAt",
-    d.position,
-    d."pathIds",
-    d."pathTitles",
-    0::int AS "depthFromArchiveAction"
-  FROM document_tree d
-  WHERE d."archivedAt" IS NOT NULL
+      UNION ALL
 
-  UNION ALL
+      SELECT
+        t."archiveActionId",
+        d.id,
+        d."parentId",
+        d.title,
+        d."updatedAt",
+        d."archivedAt",
+        t."effectiveArchivedAt",
+        d.position,
+        d."pathIds",
+        d."pathTitles",
+        t."depthFromArchiveAction" + 1
+      FROM document_tree d
+        INNER JOIN trash_tree t ON d."parentId" = t.id
+      WHERE d."archivedAt" IS NULL
+    )
 
-  SELECT
-    t."archiveActionId",
-    d.id,
-    d."parentId",
-    d.title,
-    d."updatedAt",
-    d."archivedAt",
-    t."effectiveArchivedAt",
-    d.position,
-    d."pathIds",
-    d."pathTitles",
-    t."depthFromArchiveAction" + 1
-  FROM document_tree d
-  INNER JOIN trash_tree t ON d."parentId" = t.id
-  WHERE d."archivedAt" IS NULL
-)
-
-SELECT
-  t.id,
-  t.title,
-  t."parentId",
-  t."updatedAt",
-  t."archivedAt",
-  t."archiveActionId",
-  t."effectiveArchivedAt",
-  t."depthFromArchiveAction",
-  t."pathIds",
-  t."pathTitles",
-  (t."depthFromArchiveAction" = 0) AS "isDirectlyArchived",
-  COUNT(*) OVER (PARTITION BY t."archiveActionId")::int AS "archivedTreeSize"
-FROM trash_tree t
-ORDER BY
-  t."effectiveArchivedAt" DESC,
-  t."archiveActionId",
-  t."depthFromArchiveAction" ASC,
-  t.position ASC,
-  t."updatedAt" DESC;
+    SELECT
+      t.id,
+      t.title,
+      t."parentId",
+      t."updatedAt",
+      t."archivedAt",
+      t."archiveActionId",
+      t."effectiveArchivedAt",
+      t."depthFromArchiveAction",
+      t."pathIds",
+      t."pathTitles",
+      (t."depthFromArchiveAction" = 0) AS "isDirectlyArchived",
+      COUNT(*) OVER (PARTITION BY t."archiveActionId")::int AS "archivedTreeSize"
+    FROM trash_tree t
+    ORDER BY
+      t."effectiveArchivedAt" DESC,
+      t."archiveActionId",
+      t."depthFromArchiveAction" ASC,
+      t.position ASC,
+      t."updatedAt" DESC;
   `;
 }
 
@@ -175,7 +174,7 @@ export async function findDocument(id: string, ownerId: string) {
 export async function updateDocument(id: string, ownerId: string, data: UpdateDocumentPayload) {
   const document = await findEditableDocument(id, ownerId);
   if (!document) return null;
-  
+
   return await prisma.document.update({
     where: { id },
     data: {
@@ -274,12 +273,12 @@ export async function restoreDocument(id: string, ownerId: string) {
     where: { id },
     data: context.archivedAncestorId
       ? {
-          archivedAt: null,
-          parentId: null,
-        }
+        archivedAt: null,
+        parentId: null,
+      }
       : {
-          archivedAt: null,
-        },
+        archivedAt: null,
+      },
   });
 }
 

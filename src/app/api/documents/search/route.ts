@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/auth/helper";
-import { searchActiveDocuments } from "@/features/documents/repository";
+import { searchDocuments } from "@/features/search/repository";
 import { withApiHandler } from "@/lib/api/withApiHandler";
 
 export const GET = withApiHandler(async (req) => {
@@ -18,6 +18,6 @@ export const GET = withApiHandler(async (req) => {
     ? Math.min(Math.max(parsedLimit, 1), 50)
     : 20;
 
-  const results = await searchActiveDocuments(session.user.id, normalizedQuery, limit);
+  const results = await searchDocuments(session.user.id, normalizedQuery, limit);
   return Response.json(results);
 });

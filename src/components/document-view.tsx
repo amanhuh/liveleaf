@@ -21,6 +21,7 @@ import debounce from "lodash/debounce";
 import { DocumentSkeleton } from "@/components/skeleton/document-skeleton";
 import { toast } from "sonner";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { HttpError } from "@/lib/errors";
 
 export default function DocumentView() {
   const router = useRouter();
@@ -63,11 +64,24 @@ export default function DocumentView() {
     if (selectedDocument) return;
     if (!docError) return;
 
-    toast.error("Page not found", {
-      description: "This page may have been deleted or moved.",
+    if (docError instanceof HttpError && docError.status === 401) {
+      router.replace("/sign-in");
+      return;
+    }
+
+    if (docError instanceof HttpError && docError.status === 404) {
+      toast.error("Page not found", {
+        description: "This page may have been deleted or moved.",
+        position: "bottom-right",
+      });
+      router.replace("/d");
+      return;
+    }
+
+    toast.error("Failed to load page", {
+      description: docError.message || "An unexpected error occurred.",
       position: "bottom-right",
     });
-    router.replace("/d");
   }, [selectedDocument, docError, isListLoading, isDocLoading, router]);
 
   if (isDocLoading) {
