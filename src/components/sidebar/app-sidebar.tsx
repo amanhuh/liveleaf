@@ -24,6 +24,7 @@ import { authClient } from "@/lib/auth/auth-client";
 import { useDocumentStore } from "@/stores/document-store";
 import { TrashModal } from "@/components/modals/trash-modal";
 import { SearchCommand } from "@/components/modals/search-command";
+import { SettingsModal } from "@/components/modals/settings-modal";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   DropdownMenu,
@@ -43,6 +44,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [renamingDocumentId, setRenamingDocumentId] = useState<string | null>(null);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useKeyboardShortcuts({
     onNewPage: () => createDocument.mutate({}),
@@ -177,7 +179,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton className="cursor-pointer">
+            <SidebarMenuButton className="cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
               <Settings className="size-4" />
               <span>Settings</span>
             </SidebarMenuButton>
@@ -193,6 +195,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarRail />
       <TrashModal open={isTrashOpen} onOpenChange={setIsTrashOpen} />
       <SearchCommand open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+      <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </Sidebar>
   );
 }
