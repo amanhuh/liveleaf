@@ -53,7 +53,10 @@ export function useCreateDocument() {
         mutationFn: (payload: CreateDocumentInput) => api.documents.create(payload),
         onMutate: async (payload) => {
             await queryClient.cancelQueries({ queryKey: ["documents"] });
-            const previousDocuments = queryClient.getQueryData<DocumentListItemDto[]>(["documents"]);
+            const previousDocuments = queryClient.getQueryData<DocumentListItemDto[]>(["documents"]) || [];
+            const siblings = previousDocuments.filter((d) => d.parentId === (payload.parentId || null));
+            const maxPos = siblings.reduce((max, d) => Math.max(max, d.position), 0);
+            const nextPosition = maxPos + 1000;
             const tempId = `optimistic-${Date.now()}`;
             const newDoc: DocumentListItemDto = {
                 id: tempId,
@@ -62,7 +65,7 @@ export function useCreateDocument() {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 archivedAt: null,
-                position: 0,
+                position: nextPosition,
                 icon: null,
             };
             queryClient.setQueryData<DocumentListItemDto[]>(

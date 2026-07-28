@@ -90,7 +90,7 @@ export const slashCommands: SlashCommandItem[] = [
     title: "Divider",
     icon: Minus,
     description: "Insert a horizontal divider",
-    searchTerms: ["divider", "rule", "horizontal"],
+    searchTerms: ["divider", "rule", "horizontal", "separator", "line", "hr"],
     shortcut: "---",
 
     command: ({ editor, range }: CommandProps) =>

@@ -6,12 +6,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth/auth-client";
-import { User, LogOut, Moon, Sun, Monitor, Laptop, Shield, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { User, LogOut, Moon, Sun, Monitor } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 
 interface SettingsModalProps {
   open: boolean;
@@ -20,146 +20,147 @@ interface SettingsModalProps {
 
 type TabType = "account" | "appearance";
 
+const THEME_OPTIONS = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+] as const;
+
+const TABS: { value: TabType; label: string; icon: typeof User }[] = [
+  { value: "account", label: "Account", icon: User },
+  { value: "appearance", label: "Appearance", icon: Monitor },
+];
+
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>("account");
 
   const handleSignOut = async () => {
     onOpenChange(false);
     await authClient.signOut({
       fetchOptions: {
-        onSuccess: () => {
-          router.push("/sign-in");
-        },
+        onSuccess: () => router.push("/sign-in"),
       },
     });
   };
 
+  const user = session?.user;
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "?";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl overflow-hidden p-0 gap-0 sm:rounded-xl border-sidebar-border">
-        <DialogHeader className="p-4 border-b border-sidebar-border/60">
-          <DialogTitle className="text-lg font-semibold tracking-tight">Settings</DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            Manage your account preferences and application settings.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex h-[420px] divide-x divide-sidebar-border/60">
-          {/* Settings Sidebar Nav */}
-          <aside className="w-48 p-2 space-y-1 bg-sidebar/30 shrink-0">
-            <button
-              onClick={() => setActiveTab("account")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                activeTab === "account"
-                  ? "bg-accent text-accent-foreground font-semibold"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-              }`}
-            >
-              <User className="size-4" />
-              <span>My Account</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("appearance")}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                activeTab === "appearance"
-                  ? "bg-accent text-accent-foreground font-semibold"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-              }`}
-            >
-              <Sparkles className="size-4" />
-              <span>Appearance</span>
-            </button>
+      <DialogContent className="sm:max-w-[580px] overflow-hidden p-0 gap-0">
+        <div className="flex h-[440px]">
+          {/* Left nav */}
+          <aside className="w-44 shrink-0 flex flex-col gap-0.5 border-r border-border/60 bg-muted/20 p-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-2 pt-1 pb-2">
+              Settings
+            </p>
+            {TABS.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                onClick={() => setActiveTab(value)}
+                className={cn(
+                  "flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-md text-sm transition-colors text-left cursor-pointer",
+                  activeTab === value
+                    ? "bg-background text-foreground font-medium shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/60",
+                )}
+              >
+                <Icon className="size-3.5 shrink-0" />
+                {label}
+              </button>
+            ))}
           </aside>
 
-          {/* Settings Content Area */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            {activeTab === "account" && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-semibold mb-1">Account Profile</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Your personal information and account details.
-                  </p>
+          {/* Main content */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/40 shrink-0">
+              <DialogTitle className="text-sm font-semibold text-foreground">
+                {TABS.find((t) => t.value === activeTab)?.label}
+              </DialogTitle>
+            </DialogHeader>
 
-                  <div className="flex items-center gap-4 p-4 rounded-xl border border-sidebar-border/60 bg-sidebar/20">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-lg shrink-0">
-                      {session?.user?.image ? (
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {activeTab === "account" && (
+                <div className="space-y-6">
+                  {/* Profile row */}
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-base overflow-hidden ring-1 ring-border/60">
+                      {user?.image ? (
                         <img
-                          src={session.user.image}
-                          alt={session.user.name || "User"}
-                          className="size-12 rounded-full object-cover"
+                          src={user.image}
+                          alt={user.name ?? "User"}
+                          className="size-full object-cover"
                         />
                       ) : (
-                        <User className="size-6" />
+                        <span>{initials}</span>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">
-                        {session?.user?.name || "LiveLeaf User"}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm leading-tight truncate">
+                        {user?.name || "LiveLeaf User"}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {session?.user?.email || "No email associated"}
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {user?.email || "—"}
                       </p>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between py-2 border-b border-sidebar-border/40 text-xs">
-                    <span className="text-muted-foreground">User ID</span>
-                    <span className="font-mono text-[11px] text-foreground/80 truncate max-w-[220px]">
-                      {session?.user?.id || "N/A"}
-                    </span>
+                  <div className="h-px bg-border/50" />
+
+                  {/* Sign out */}
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2.5">
+                      Danger zone
+                    </p>
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 text-sm font-medium text-destructive hover:text-destructive/75 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="size-3.5" />
+                      Sign out of LiveLeaf
+                    </button>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-sidebar-border/40 text-xs">
-                    <span className="text-muted-foreground">Authentication Status</span>
-                    <span className="inline-flex items-center gap-1.5 text-emerald-500 font-medium">
-                      <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Active Session
-                    </span>
-                  </div>
                 </div>
+              )}
 
-                <div className="pt-4 border-t border-sidebar-border/60">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleSignOut}
-                    className="w-full gap-2 text-xs font-medium cursor-pointer"
-                  >
-                    <LogOut className="size-3.5" />
-                    <span>Sign Out of Account</span>
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "appearance" && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-semibold mb-1">Appearance & Theme</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Customize how LiveLeaf looks on your screen.
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-4 rounded-xl border border-primary bg-primary/5 text-primary flex flex-col items-center justify-center gap-2 cursor-pointer">
-                      <Moon className="size-6" />
-                      <span className="text-xs font-semibold">Dark Theme</span>
-                      <span className="text-[10px] text-muted-foreground">Default & Active</span>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-sidebar-border/60 bg-sidebar/20 text-muted-foreground flex flex-col items-center justify-center gap-2 opacity-60 cursor-not-allowed">
-                      <Sun className="size-6" />
-                      <span className="text-xs font-medium">Light Theme</span>
-                      <span className="text-[10px]">Coming Soon</span>
+              {activeTab === "appearance" && (
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-3">
+                      Interface theme
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => setTheme(value)}
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-2.5 py-5 rounded-lg border text-sm font-medium transition-all cursor-pointer",
+                            theme === value
+                              ? "ring-1 ring-foreground/20 bg-accent text-foreground border-border/40"
+                              : "border-border/60 bg-background/50 text-muted-foreground hover:border-border hover:text-foreground hover:bg-background",
+                          )}
+                        >
+                          <Icon className="size-4" />
+                          <span className="text-xs">{label}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>

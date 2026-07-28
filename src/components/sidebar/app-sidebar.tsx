@@ -15,7 +15,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { PlusIcon, LogOut, ChevronDown, User, Trash2, Settings, Leaf, Search } from "lucide-react";
+import { PlusIcon, LogOut, ChevronDown, Trash2, Settings, Search } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import TreeItem from "./tree-item";
 import { useGetDocuments, useCreateDocument } from "@/hooks/use-document";
@@ -32,6 +32,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams<{ documentId: string }>();
@@ -83,7 +88,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             {isSessionLoading ? (
-              <SidebarMenuButton size="lg" className="pointer-events-none">
+              <SidebarMenuButton size="default" className="pointer-events-none">
                 <div className="flex aspect-square size-8 animate-pulse rounded-lg bg-sidebar-accent" />
                 <div className="grid flex-1 space-y-1.5 text-left leading-tight">
                   <div className="h-3 w-16 animate-pulse rounded bg-sidebar-accent" />
@@ -95,21 +100,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton
-                    size="lg"
+                    size="default"
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                      <User className="size-4" />
+                    <div className="flex aspect-square size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground text-xs font-semibold">
+                      {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
+                      <span className="truncate font-medium">
                         {session?.user?.name || "User"}
                       </span>
-                      <span className="truncate text-xs">
+                      <span className="truncate text-xs text-muted-foreground">
                         {session?.user?.email || ""}
                       </span>
                     </div>
-                    <ChevronDown className="ml-auto size-4" />
+                    <ChevronDown className="ml-auto size-3.5 text-muted-foreground" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -132,15 +137,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>
-            <span>Documents</span>
-            <PlusIcon
-              className="ml-auto cursor-pointer"
+            <span>Pages</span>
+            <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 createDocument.mutate({});
               }}
-            />
+              className="ml-auto rounded-sm p-0.5 hover:bg-accent transition-colors cursor-pointer"
+            >
+              <PlusIcon className="size-3.5" />
+            </button>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -166,31 +173,46 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="pointer-events-none absolute -top-6 left-0 right-0 h-6 bg-gradient-to-t from-sidebar via-sidebar/80 to-transparent" />
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="cursor-pointer" onClick={() => setIsSearchOpen(true)}>
-              <Search className="size-4" />
-              <span>Search</span>
-              <kbd className="ml-auto text-[10px] font-mono opacity-60">⌘K</kbd>
-            </SidebarMenuButton>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuButton className="cursor-pointer" onClick={() => setIsSearchOpen(true)}>
+                  <Search className="size-4" />
+                  <span>Search</span>
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Search (⌘K)</p>
+              </TooltipContent>
+            </Tooltip>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton className="cursor-pointer" onClick={() => setIsTrashOpen(true)}>
-              <Trash2 className="size-4" />
-              <span>Trash</span>
-            </SidebarMenuButton>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuButton className="cursor-pointer" onClick={() => setIsTrashOpen(true)}>
+                  <Trash2 className="size-4" />
+                  <span>Trash</span>
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Trash (⇧⌘⌫)</p>
+              </TooltipContent>
+            </Tooltip>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton className="cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
-              <Settings className="size-4" />
-              <span>Settings</span>
-            </SidebarMenuButton>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuButton className="cursor-pointer" onClick={() => setIsSettingsOpen(true)}>
+                  <Settings className="size-4" />
+                  <span>Settings</span>
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Settings</p>
+              </TooltipContent>
+            </Tooltip>
           </SidebarMenuItem>
         </SidebarMenu>
-        <div className="flex items-center gap-2 px-2 py-2 text-xs font-medium border-t border-sidebar-border/60 mt-1 text-muted-foreground">
-          <div className="flex size-5 items-center justify-center rounded bg-primary/10 text-primary">
-            <Leaf className="size-3.5" />
-          </div>
-          <span className="font-semibold tracking-tight text-foreground/80">LiveLeaf</span>
-        </div>
+
       </SidebarFooter>
       <SidebarRail />
       <TrashModal open={isTrashOpen} onOpenChange={setIsTrashOpen} />

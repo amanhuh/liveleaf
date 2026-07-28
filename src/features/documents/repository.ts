@@ -9,11 +9,28 @@ export async function createDocument(ownerId: string, data: CreateDocumentPayloa
     if (!parent) return null;
   }
 
+  const maxPosDoc = await prisma.document.findFirst({
+    where: {
+      ownerId,
+      parentId: data.parentId ?? null,
+      archivedAt: null,
+    },
+    orderBy: {
+      position: "desc",
+    },
+    select: {
+      position: true,
+    },
+  });
+
+  const nextPosition = maxPosDoc ? maxPosDoc.position + 1000 : 0;
+
   return await prisma.document.create({
     data: {
       title: data.title,
       ownerId,
-      parentId: data.parentId
+      parentId: data.parentId,
+      position: nextPosition,
     },
   });
 }

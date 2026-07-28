@@ -110,7 +110,7 @@ export function TrashModal({ open, onOpenChange }: TrashModalProps) {
               placeholder="Filter trash pages..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-background h-9 border-border/60"
+              className="pl-9 bg-transparent h-9 border-border/60"
             />
           </div>
         </div>

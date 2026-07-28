@@ -23,11 +23,11 @@ function renderSnippet(snippet: string) {
   const parts = snippet.split(/<<|>>/);
   return parts.map((part, i) =>
     i % 2 === 1 ? (
-      <strong key={i} className="font-semibold text-foreground">
+      <strong key={i} className="font-semibold text-foreground not-italic">
         {part}
       </strong>
     ) : (
-      part
+      <em key={i}>{part}</em>
     ),
   );
 }
@@ -84,10 +84,10 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           </div>
         )}
         {!isLoading && debouncedQuery.trim().length > 0 && results.length === 0 && (
-          <CommandEmpty>No matching pages found.</CommandEmpty>
+          <CommandEmpty>No pages match your search.</CommandEmpty>
         )}
         {results.length > 0 && (
-          <CommandGroup heading="Documents">
+          <CommandGroup heading="Pages">
             {results.map((doc) => {
               const bodySnippet =
                 doc.snippet && doc.snippet.includes("<<") ? doc.snippet : null;
@@ -97,7 +97,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                   key={doc.id}
                   value={doc.id}
                   onSelect={() => handleSelect(doc.id)}
-                  className="cursor-pointer py-2"
+                  className="cursor-pointer py-2.5"
                 >
                   <span className="text-base mr-1.5 shrink-0">
                     {doc.icon || <FileText className="size-4 text-muted-foreground" />}
@@ -112,7 +112,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                       </span>
                     )}
                     {bodySnippet && (
-                      <span className="text-[11px] text-muted-foreground truncate mt-0.5">
+                      <span className="text-[11px] text-muted-foreground truncate mt-0.5 italic">
                         {renderSnippet(bodySnippet)}
                       </span>
                     )}

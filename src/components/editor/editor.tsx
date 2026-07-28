@@ -49,7 +49,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
       StarterKit,
       SlashCommand,
       Placeholder.configure({
-        placeholder: "Type '/' for commands...",
+        placeholder: "Start writing...",
         emptyEditorClass:
           "before:content-[attr(data-placeholder)] before:float-left before:text-muted-foreground before:h-0 before:pointer-events-none opacity-60",
       }),
@@ -122,7 +122,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
             );
           }}
         >
-          <div className="bubble-menu animate-in fade-in-0 zoom-in-95 flex items-center gap-0.5 rounded-xl border border-border/40 bg-background/80 backdrop-blur-xl p-1 shadow-xl shadow-black/[0.08] dark:shadow-black/30">
+          <div className="bubble-menu animate-in fade-in-0 zoom-in-95 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
             <BubbleButton
               active={editorState?.isBold ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleBold().run())}
@@ -143,7 +143,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
               onClick={() => toggle(() => editor.chain().focus().toggleStrike().run())}
               icon={<Strikethrough className="h-3.5 w-3.5" />}
             />
-            <div className="mx-0.5 h-4 w-px bg-border/60" />
+            <div className="mx-1 h-3.5 w-px bg-border" />
             <BubbleButton
               active={editorState?.isCode ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleCode().run())}
@@ -177,11 +177,11 @@ function BubbleButton({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-lg transition-all duration-150 cursor-pointer",
-        "hover:bg-accent/80 active:scale-90",
+        "flex h-7 w-7 items-center justify-center rounded-md transition-all duration-100 cursor-pointer",
+        "active:scale-90",
         active
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
+          ? "bg-muted text-foreground"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/70",
       )}
     >
       {icon}

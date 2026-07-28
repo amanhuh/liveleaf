@@ -94,7 +94,7 @@ export default function DocumentView() {
 
   return (
     <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+      <header className="flex h-11 shrink-0 items-center gap-2 border-b border-border/50 px-4">
         <SidebarTrigger className="-ml-1" />
         <Breadcrumb>
           <BreadcrumbList>
@@ -124,14 +124,14 @@ export default function DocumentView() {
         </Breadcrumb>
       </header>
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl px-8 py-16">
+        <div className="mx-auto max-w-2xl px-8 py-20">
           <TitleEditor
             key={selectedDocument.id}
             documentId={selectedDocument.id}
             initialTitle={selectedDocument.title ?? ""}
             inputRef={titleInputRef}
           />
-          <div className="text-base leading-relaxed">
+          <div className="text-[1.0625rem] leading-relaxed">
             <Tiptap
               key={selectedDocument.id}
               document={selectedDocument}
@@ -180,10 +180,10 @@ function TitleEditor({
 
   return (
     <textarea
-      placeholder="New Page"
+      placeholder="Untitled"
       rows={1}
       ref={textareaRef}
-      className="w-full font-bold text-5xl tracking-tight mb-2 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/40"
+      className="w-full font-bold text-[2.75rem] leading-[1.1] tracking-[-0.03em] mb-4 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/30"
       value={title}
       onChange={(e) => {
         setTitle(e.target.value);
