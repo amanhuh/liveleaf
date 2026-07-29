@@ -65,7 +65,7 @@ export async function findActiveDocuments(ownerId: string): Promise<DocumentList
       WHERE d."ownerId" = ${ownerId}
         AND d."archivedAt" IS NULL
     )
-    SELECT * FROM active_tree ORDER BY position ASC;
+    SELECT * FROM active_tree ORDER BY position ASC, "createdAt" ASC, id ASC;
   `;
 }
 

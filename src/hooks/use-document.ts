@@ -52,7 +52,7 @@ export function useCreateDocument() {
     return useMutation({
         mutationFn: (payload: CreateDocumentInput) => api.documents.create(payload),
         onMutate: async (payload) => {
-            await queryClient.cancelQueries({ queryKey: ["documents"] });
+            await queryClient.cancelQueries({ queryKey: ["documents"], exact: true });
             const previousDocuments = queryClient.getQueryData<DocumentListItemDto[]>(["documents"]) || [];
             const siblings = previousDocuments.filter((d) => d.parentId === (payload.parentId || null));
             const maxPos = siblings.reduce((max, d) => Math.max(max, d.position), 0);
@@ -96,7 +96,7 @@ export function useCreateDocument() {
             router.push(`/d/${document.id}`);
         },
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ["documents"] });
+            queryClient.invalidateQueries({ queryKey: ["documents"], exact: true });
         },
     });
 }
@@ -108,7 +108,7 @@ export function useUpdateDocument(docId: string) {
     mutationFn: (payload: UpdateDocumentPayload) =>
       api.documents.update(docId, payload),
     onMutate: async (payload) => {
-      await queryClient.cancelQueries({ queryKey: ["documents"] });
+      await queryClient.cancelQueries({ queryKey: ["documents"], exact: true });
       await queryClient.cancelQueries({ queryKey: ["documents", docId] });
       const previousDocuments = queryClient.getQueryData<DocumentListItemDto[]>(["documents"]);
       const previousDocument = queryClient.getQueryData<DocumentDto>(["documents", docId]);
@@ -168,7 +168,7 @@ export function useArchiveDocument(docId: string) {
     return useMutation({
         mutationFn: () => api.documents.archive(docId),
         onMutate: async () => {
-            await queryClient.cancelQueries({ queryKey: ["documents"] });
+            await queryClient.cancelQueries({ queryKey: ["documents"], exact: true });
             const previousDocuments = queryClient.getQueryData<DocumentListItemDto[]>(["documents"]);
             queryClient.setQueryData<DocumentListItemDto[]>(
                 ["documents"],
@@ -182,8 +182,8 @@ export function useArchiveDocument(docId: string) {
             }
         },
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ["documents"] });
-            queryClient.invalidateQueries({ queryKey: ["documents", "trash"] });
+            queryClient.invalidateQueries({ queryKey: ["documents"], exact: true });
+            queryClient.invalidateQueries({ queryKey: ["documents", "trash"], exact: true });
             queryClient.invalidateQueries({ queryKey: ["documents", docId] });
         },
     });
@@ -195,8 +195,8 @@ export function useRestoreDocument() {
   return useMutation({
     mutationFn: (id: string) => api.documents.restore(id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["documents"] });
-      await queryClient.cancelQueries({ queryKey: ["documents", "trash"] });
+      await queryClient.cancelQueries({ queryKey: ["documents"], exact: true });
+      await queryClient.cancelQueries({ queryKey: ["documents", "trash"], exact: true });
       const previousDocuments = queryClient.getQueryData<DocumentListItemDto[]>(["documents"]);
       const previousTrash = queryClient.getQueryData<TrashDocumentTreeItemDto[]>(["documents", "trash"]);
 
@@ -219,8 +219,8 @@ export function useRestoreDocument() {
       queryClient.setQueryData(["documents", document.id], document);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-      queryClient.invalidateQueries({ queryKey: ["documents", "trash"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["documents", "trash"], exact: true });
     },
   });
 }
@@ -231,8 +231,8 @@ export function useDeleteDocument() {
   return useMutation({
     mutationFn: (id: string) => api.documents.delete(id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["documents"] });
-      await queryClient.cancelQueries({ queryKey: ["documents", "trash"] });
+      await queryClient.cancelQueries({ queryKey: ["documents"], exact: true });
+      await queryClient.cancelQueries({ queryKey: ["documents", "trash"], exact: true });
       const previousDocuments = queryClient.getQueryData<DocumentListItemDto[]>(["documents"]);
       const previousTrash = queryClient.getQueryData<TrashDocumentTreeItemDto[]>(["documents", "trash"]);
 
@@ -256,9 +256,13 @@ export function useDeleteDocument() {
         queryClient.setQueryData(["documents", "trash"], context.previousTrash);
       }
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["documents", "trash"], exact: true });
+    },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-      queryClient.invalidateQueries({ queryKey: ["documents", "trash"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["documents", "trash"], exact: true });
     },
   });
 }

@@ -103,7 +103,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     size="default"
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <div className="flex aspect-square size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground text-xs font-semibold">
+                    <div className="flex aspect-square size-7 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary text-xs font-semibold ring-1 ring-primary/30">
                       {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">

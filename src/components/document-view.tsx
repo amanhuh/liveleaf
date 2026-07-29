@@ -168,6 +168,10 @@ function TitleEditor({
   );
 
   useEffect(() => {
+    setTitle(initialTitle);
+  }, [initialTitle]);
+
+  useEffect(() => {
     return () => debouncedSaveTitle.cancel();
   }, [debouncedSaveTitle]);
 
@@ -183,7 +187,7 @@ function TitleEditor({
       placeholder="Untitled"
       rows={1}
       ref={textareaRef}
-      className="w-full font-bold text-[2.75rem] leading-[1.1] tracking-[-0.03em] mb-4 focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/30"
+      className="w-full font-bold text-[2.75rem] leading-[1.1] tracking-[-0.03em] mb-4 text-foreground focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/30"
       value={title}
       onChange={(e) => {
         setTitle(e.target.value);

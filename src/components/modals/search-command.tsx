@@ -90,7 +90,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           <CommandGroup heading="Pages">
             {results.map((doc) => {
               const bodySnippet =
-                doc.snippet && doc.snippet.includes("<<") ? doc.snippet : null;
+                doc.snippet && doc.snippet.trim() ? doc.snippet : null;
 
               return (
                 <CommandItem

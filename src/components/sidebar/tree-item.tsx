@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { DocumentListItemDto } from "@/features/documents";
 import {
   Collapsible,
@@ -55,6 +55,18 @@ export default function TreeItem({
 
   const isRenaming = renamingDocumentId === item.id;
 
+  useEffect(() => {
+    if (isRenaming) {
+      setDraftTitle(item.title);
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.select();
+        }
+      }, 0);
+    }
+  }, [isRenaming, item.title]);
+
   const handleSave = () => {
     updateDocument.mutate({ title: draftTitle.trim() || "New Page" });
     setRenamingDocumentId(null);
@@ -66,12 +78,12 @@ export default function TreeItem({
   };
 
   const buttonContent = isRenaming ? (
-    <div className="p-2">
-      <FileIcon />
+    <div className="flex items-center w-full min-w-0 px-2 py-0.5 rounded-md bg-sidebar-accent/60 ring-1 ring-border/80">
+      <FileIcon className="size-4 mr-2 shrink-0 text-muted-foreground" />
       <input
         autoFocus
         ref={inputRef}
-        className="bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 p-0 m-0"
+        className="bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 p-0 m-0 w-full min-w-0 text-sm font-medium text-foreground selection:bg-foreground/15"
         value={draftTitle}
         onChange={(e) => setDraftTitle(e.target.value)}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -99,7 +111,17 @@ export default function TreeItem({
         )}
         <FileIcon className={cn("size-4", hasChildren && "group-hover/item:opacity-0")} />
       </div>
-      <span className="truncate flex-1">{documentName}</span>
+      <span
+        onDoubleClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setRenamingDocumentId(item.id);
+        }}
+        className="truncate flex-1 select-none"
+        title="Double-click to rename"
+      >
+        {documentName}
+      </span>
       <ActionButtons
         item={item}
         setRenamingDocumentId={setRenamingDocumentId}
@@ -116,7 +138,6 @@ export default function TreeItem({
           isActive={selectedDocumentId === item.id}
           className={cn(
             "group/item data-[active=true]:bg-accent cursor-pointer",
-            isRenaming && "bg-blue-600/15! border border-blue-600",
           )}
           asChild
         >

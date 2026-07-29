@@ -122,7 +122,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
             );
           }}
         >
-          <div className="bubble-menu animate-in fade-in-0 zoom-in-95 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+          <div className="bubble-menu animate-in fade-in-0 zoom-in-95 flex items-center gap-0.5 rounded-lg border border-border bg-popover p-1.5 max-w-[90vw] overflow-x-auto shadow-[0_8px_24px_rgba(0,0,0,0.12),0_0_16px_oklch(0.58_0.16_150_/_10%)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_20px_oklch(0.72_0.16_150_/_12%)]">
             <BubbleButton
               active={editorState?.isBold ?? false}
               onClick={() => toggle(() => editor.chain().focus().toggleBold().run())}
