@@ -330,14 +330,14 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
           tabIndex={-1}
           onMouseDown={handleMouseDown}
           className={cn(
-            "absolute inset-y-0 z-20 hidden w-4 cursor-col-resize group-data-[side=left]:-right-2 group-data-[side=right]:-left-2 sm:flex items-center justify-center group/rail",
+            "absolute inset-y-0 z-20 hidden w-4 cursor-col-resize select-none group-data-[side=left]:-right-2 group-data-[side=right]:-left-2 sm:flex items-center justify-center group/rail",
             className
           )}
           {...props}
         >
           <div
             className={cn(
-              "h-full w-[2px] bg-transparent transition-colors duration-75 group-hover/rail:bg-primary/30 active:bg-primary/30 group-active/rail:bg-primary/30",
+              "h-full w-[2px] bg-transparent cursor-col-resize select-none transition-colors duration-75 group-hover/rail:bg-primary/30 active:bg-primary/30 group-active/rail:bg-primary/30",
               isResizing && "bg-primary/30"
             )}
           />

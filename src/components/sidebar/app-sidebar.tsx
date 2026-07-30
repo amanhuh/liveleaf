@@ -3,6 +3,25 @@
 import * as React from "react";
 import { useState } from "react";
 import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  DragMoveEvent,
+  DragOverEvent,
+  DragStartEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
@@ -18,7 +37,7 @@ import {
 import { PlusIcon, LogOut, ChevronDown, Trash2, Settings, Search } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import TreeItem from "./tree-item";
-import { useGetDocuments, useCreateDocument } from "@/hooks/use-document";
+import { useGetDocuments, useCreateDocument, useMoveDocument } from "@/hooks/use-document";
 import { SidebarSkeleton } from "@/components/skeleton/sidebar-skeleton";
 import { authClient } from "@/lib/auth/auth-client";
 import { useDocumentStore } from "@/stores/document-store";
@@ -37,6 +56,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { DocumentListItemDto } from "@/features/documents";
+import {
+  buildVisibleSidebarTree,
+  getDropIndicator,
+  getProjectedMove,
+  type FlatSidebarDocument,
+  type ProjectedSidebarMove,
+} from "./sidebar-tree-utils";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams<{ documentId: string }>();
@@ -45,11 +72,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: documents = [], isLoading: isDocsLoading } = useGetDocuments();
   const rootDocs = documents.filter((doc) => doc.parentId === null);
   const createDocument = useCreateDocument();
+  const moveDocument = useMoveDocument();
   const { data: session, isPending: isSessionLoading } = authClient.useSession();
   const [renamingDocumentId, setRenamingDocumentId] = useState<string | null>(null);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [projectedMove, setProjectedMove] = useState<ProjectedSidebarMove | null>(null);
+  const suppressNavigationRef = React.useRef(false);
+  const expandedDocumentIds = useDocumentStore((state) => state.expandedDocumentIds);
+  const expandDocument = useDocumentStore((state) => state.expandDocument);
+  const visibleItems = React.useMemo(
+    () => buildVisibleSidebarTree(documents, expandedDocumentIds),
+    [documents, expandedDocumentIds],
+  );
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   useKeyboardShortcuts({
     onNewPage: () => createDocument.mutate({}),
@@ -82,6 +129,80 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     });
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    suppressNavigationRef.current = true;
+    setActiveDragId(String(event.active.id));
+    setProjectedMove(null);
+  };
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    updateProjectedMove(String(event.active.id), event.over ? String(event.over.id) : null, event.delta.x);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    updateProjectedMove(String(event.active.id), event.over ? String(event.over.id) : null, event.delta.x);
+  };
+
+  const updateProjectedMove = (
+    activeId: string,
+    overId: string | null,
+    offsetX: number,
+  ) => {
+    if (!overId || activeId === overId) {
+      setProjectedMove(null);
+      return;
+    }
+
+    const move = getProjectedMove(visibleItems, activeId, overId, offsetX);
+    if (!move || wouldMoveInsideDescendant(documents, activeId, move.parentId)) {
+      setProjectedMove(null);
+      return;
+    }
+
+    setProjectedMove(move);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const activeId = String(event.active.id);
+    const overId = event.over ? String(event.over.id) : null;
+    suppressNavigationRef.current = true;
+    window.setTimeout(() => {
+      suppressNavigationRef.current = false;
+    }, 400);
+    setActiveDragId(null);
+    setProjectedMove(null);
+
+    if (!overId || activeId === overId) return;
+
+    const projectedMoveResult = getProjectedMove(
+      visibleItems,
+      activeId,
+      overId,
+      event.delta.x,
+    );
+
+    if (!projectedMoveResult || wouldMoveInsideDescendant(documents, activeId, projectedMoveResult.parentId)) {
+      return;
+    }
+
+    moveDocument.mutate({
+      id: activeId,
+      parentId: projectedMoveResult.parentId,
+      beforeId: projectedMoveResult.beforeId,
+      afterId: projectedMoveResult.afterId,
+    });
+
+    if (projectedMoveResult.parentId) {
+      expandDocument(projectedMoveResult.parentId);
+    }
+  };
+
+  const handleDragCancel = () => {
+    suppressNavigationRef.current = false;
+    setActiveDragId(null);
+    setProjectedMove(null);
+  };
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -103,7 +224,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     size="default"
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <div className="flex aspect-square size-7 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary text-xs font-semibold ring-1 ring-primary/30">
+                    <div className="flex aspect-square size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground text-xs font-semibold">
                       {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
@@ -154,16 +275,35 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {isDocsLoading ? (
                 <SidebarSkeleton count={hydrated ? lastDocumentCount : 3} />
               ) : (
-                rootDocs.map((doc) => (
-                  <TreeItem
-                    key={doc.id}
-                    selectedDocumentId={selectedDocumentId}
-                    item={doc}
-                    docs={documents}
-                    renamingDocumentId={renamingDocumentId}
-                    setRenamingDocumentId={setRenamingDocumentId}
-                  />
-                ))
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={handleDragStart}
+                  onDragMove={handleDragMove}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                  onDragCancel={handleDragCancel}
+                >
+                  <SortableContext
+                    items={visibleItems.map((item) => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {visibleItems.map((item) => (
+                      <SortableSidebarItem
+                        key={item.id}
+                        item={item}
+                        docs={documents}
+                        selectedDocumentId={selectedDocumentId}
+                        renamingDocumentId={renamingDocumentId}
+                        setRenamingDocumentId={setRenamingDocumentId}
+                        disabled={renamingDocumentId !== null}
+                        isActiveDragItem={activeDragId === item.id}
+                        dropIndicator={getDropIndicator(item.id, projectedMove, visibleItems)}
+                        suppressNavigationRef={suppressNavigationRef}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -220,4 +360,78 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </Sidebar>
   );
+}
+
+function SortableSidebarItem({
+  item,
+  docs,
+  selectedDocumentId,
+  renamingDocumentId,
+  setRenamingDocumentId,
+  disabled,
+  isActiveDragItem,
+  dropIndicator,
+  suppressNavigationRef,
+}: {
+  item: FlatSidebarDocument;
+  docs: DocumentListItemDto[];
+  selectedDocumentId: string;
+  renamingDocumentId: string | null;
+  setRenamingDocumentId: React.Dispatch<React.SetStateAction<string | null>>;
+  disabled: boolean;
+  isActiveDragItem: boolean;
+  dropIndicator: ReturnType<typeof getDropIndicator>;
+  suppressNavigationRef: React.MutableRefObject<boolean>;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: item.id,
+    disabled,
+  });
+
+  return (
+    <TreeItem
+      selectedDocumentId={selectedDocumentId}
+      item={item.document}
+      docs={docs}
+      depth={item.depth}
+      renamingDocumentId={renamingDocumentId}
+      setRenamingDocumentId={setRenamingDocumentId}
+      isDragging={isDragging || isActiveDragItem}
+      dropIndicator={dropIndicator}
+      suppressNavigationRef={suppressNavigationRef}
+      itemRef={setNodeRef}
+      itemStyle={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 10 : undefined,
+      }}
+      dragAttributes={attributes}
+      dragListeners={listeners}
+    />
+  );
+}
+
+function wouldMoveInsideDescendant(
+  docs: DocumentListItemDto[],
+  activeId: string,
+  targetParentId: string | null,
+) {
+  if (!targetParentId) return false;
+
+  let current = docs.find((doc) => doc.id === targetParentId);
+  while (current) {
+    if (current.id === activeId) return true;
+    current = current.parentId
+      ? docs.find((doc) => doc.id === current?.parentId)
+      : undefined;
+  }
+
+  return false;
 }

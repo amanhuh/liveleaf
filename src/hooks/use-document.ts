@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, SearchDocumentItemDto, UpdateDocumentPayload, CreateDocumentInput } from "@/features/documents";
+import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, SearchDocumentItemDto, UpdateDocumentPayload, MoveDocumentPayload, CreateDocumentInput } from "@/features/documents";
 import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function useGetDocuments() {
     return useQuery<DocumentListItemDto[]>({
@@ -43,6 +44,46 @@ function removeDocumentSubtree(docs: DocumentListItemDto[], rootId: string): Doc
     };
     collect(rootId);
     return docs.filter((d) => !removedIds.has(d.id));
+}
+
+function getMovedDocumentPosition(
+  docs: DocumentListItemDto[],
+  payload: MoveDocumentPayload,
+  movingDocumentId: string,
+) {
+  const siblings = docs
+    .filter((doc) => doc.parentId === payload.parentId && doc.id !== movingDocumentId)
+    .sort((a, b) => a.position - b.position || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+
+  const getBetween = (
+    previous: DocumentListItemDto | null,
+    next: DocumentListItemDto | null,
+  ) => {
+    if (previous && next) return (previous.position + next.position) / 2;
+    if (previous) return previous.position + 1000;
+    if (next) return next.position - 1000;
+    return 0;
+  };
+
+  if (payload.beforeId) {
+    const nextIndex = siblings.findIndex((doc) => doc.id === payload.beforeId);
+    const next = nextIndex >= 0 ? siblings[nextIndex] : null;
+    const previous = nextIndex > 0 ? siblings[nextIndex - 1] : null;
+    return getBetween(previous, next);
+  }
+
+  if (payload.afterId) {
+    const previousIndex = siblings.findIndex((doc) => doc.id === payload.afterId);
+    const previous = previousIndex >= 0 ? siblings[previousIndex] : null;
+    const next = previousIndex >= 0 ? siblings[previousIndex + 1] ?? null : null;
+    return getBetween(previous, next);
+  }
+
+  return getBetween(siblings[siblings.length - 1] ?? null, null);
+}
+
+function getDocumentTitle(document?: Pick<DocumentListItemDto, "title"> | null) {
+  return document?.title?.trim() || "New Page";
 }
 
 export function useCreateDocument() {
@@ -263,6 +304,68 @@ export function useDeleteDocument() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["documents", "trash"], exact: true });
+    },
+  });
+}
+
+export function useMoveDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, ...payload }: { id: string } & MoveDocumentPayload) =>
+      api.documents.move(id, payload),
+    onMutate: async ({ id, ...payload }) => {
+      await queryClient.cancelQueries({ queryKey: ["documents"], exact: true });
+
+      const previousDocuments = queryClient.getQueryData<DocumentListItemDto[]>(["documents"]);
+      const movingDocument = previousDocuments?.find((doc) => doc.id === id);
+      const targetParent = payload.parentId
+        ? previousDocuments?.find((doc) => doc.id === payload.parentId)
+        : null;
+      const nextPosition = previousDocuments
+        ? getMovedDocumentPosition(previousDocuments, payload, id)
+        : 0;
+
+      queryClient.setQueryData<DocumentListItemDto[]>(
+        ["documents"],
+        (old) => old?.map((doc) => doc.id === id ? {
+          ...doc,
+          parentId: payload.parentId,
+          position: nextPosition,
+          updatedAt: new Date().toISOString(),
+        } : doc) ?? [],
+      );
+
+      return { previousDocuments, movingDocument, targetParent };
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previousDocuments) {
+        queryClient.setQueryData(["documents"], context.previousDocuments);
+      }
+
+      toast.error(error instanceof Error ? error.message : "Could not move page");
+    },
+    onSuccess: (document, variables, context) => {
+      queryClient.setQueryData(["documents", document.id], document);
+      queryClient.setQueryData<DocumentListItemDto[]>(
+        ["documents"],
+        (old) => old?.map((doc) => doc.id === document.id ? {
+          ...doc,
+          title: document.title,
+          parentId: document.parentId,
+          updatedAt: document.updatedAt,
+          archivedAt: document.archivedAt,
+          icon: document.icon,
+          position: document.position,
+        } : doc) ?? [],
+      );
+
+      const movedTitle = getDocumentTitle(context?.movingDocument);
+      if (variables.parentId) {
+        toast.success(`Moved "${movedTitle}" inside "${getDocumentTitle(context?.targetParent)}"`);
+      } else {
+        toast.success(`Moved "${movedTitle}" to root`);
+      }
     },
   });
 }

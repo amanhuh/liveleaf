@@ -1,13 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import type { DocumentListItemDto } from "@/features/documents";
 import {
-  Collapsible,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
-import {
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
 } from "@/components/ui/sidebar";
 import {
   Tooltip,
@@ -18,10 +13,14 @@ import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { DropdownMenuEllipsis } from "./drorpdown-menu-ellipsis";
 import { ContextMenuEllipsis } from "./context-menu-ellipsis";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FileIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 import { useCreateDocument, useUpdateDocument } from "@/hooks/use-document";
+import {
+  SIDEBAR_INDENTATION_WIDTH,
+  type DropIndicatorState,
+} from "./sidebar-tree-utils";
 
 export type TreeItemProps = {
   item: DocumentListItemDto;
@@ -29,6 +28,14 @@ export type TreeItemProps = {
   selectedDocumentId: string;
   renamingDocumentId: string | null;
   setRenamingDocumentId: React.Dispatch<React.SetStateAction<string | null>>;
+  depth?: number;
+  isDragging?: boolean;
+  dropIndicator?: DropIndicatorState;
+  suppressNavigationRef?: React.MutableRefObject<boolean>;
+  itemRef?: (node: HTMLLIElement | null) => void;
+  itemStyle?: React.CSSProperties;
+  dragAttributes?: React.HTMLAttributes<HTMLElement>;
+  dragListeners?: React.HTMLAttributes<HTMLElement>;
 };
 
 export default function TreeItem({
@@ -37,7 +44,16 @@ export default function TreeItem({
   docs,
   renamingDocumentId,
   setRenamingDocumentId,
+  depth = 0,
+  isDragging = false,
+  dropIndicator = null,
+  suppressNavigationRef,
+  itemRef,
+  itemStyle,
+  dragAttributes,
+  dragListeners,
 }: TreeItemProps) {
+  const router = useRouter();
   const expandedDocumentIds = useDocumentStore((state) => state.expandedDocumentIds);
   const isOpen = expandedDocumentIds.includes(item.id);
   const toggleExpanded = useDocumentStore((state) => state.toggleExpanded);
@@ -57,13 +73,15 @@ export default function TreeItem({
 
   useEffect(() => {
     if (isRenaming) {
-      setDraftTitle(item.title);
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
+        setDraftTitle(item.title);
         if (inputRef.current) {
           inputRef.current.focus();
           inputRef.current.select();
         }
       }, 0);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [isRenaming, item.title]);
 
@@ -77,13 +95,28 @@ export default function TreeItem({
     setRenamingDocumentId(null);
   };
 
+  const handleNavigate = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (suppressNavigationRef?.current) {
+      suppressNavigationRef.current = false;
+      event.preventDefault();
+      return;
+    }
+
+    if (event.metaKey || event.ctrlKey) {
+      window.open(`/d/${item.id}`, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    router.push(`/d/${item.id}`);
+  };
+
   const buttonContent = isRenaming ? (
     <div className="flex items-center w-full min-w-0 px-2 py-0.5 rounded-md bg-sidebar-accent/60 ring-1 ring-border/80">
       <FileIcon className="size-4 mr-2 shrink-0 text-muted-foreground" />
       <input
         autoFocus
         ref={inputRef}
-        className="bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 p-0 m-0 w-full min-w-0 text-sm font-medium text-foreground selection:bg-foreground/15"
+        className="bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 p-0 m-0 w-full min-w-0 text-sm font-medium text-foreground"
         value={draftTitle}
         onChange={(e) => setDraftTitle(e.target.value)}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -95,7 +128,22 @@ export default function TreeItem({
       />
     </div>
   ) : (
-    <Link href={`/d/${item.id}`} className="flex items-center w-full min-w-0">
+    <div
+      role="link"
+      tabIndex={0}
+      className="flex items-center w-full min-w-0 cursor-pointer"
+      style={{ paddingLeft: depth * SIDEBAR_INDENTATION_WIDTH }}
+      onClick={handleNavigate}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        if (suppressNavigationRef?.current) {
+          suppressNavigationRef.current = false;
+          return;
+        }
+        router.push(`/d/${item.id}`);
+      }}
+    >
       <div className="relative size-4 mr-2 shrink-0 flex items-center justify-center">
         {hasChildren && (
           <button
@@ -128,7 +176,7 @@ export default function TreeItem({
         createDocument={createDocument}
         expandDocument={expandDocument}
       />
-    </Link>
+    </div>
   );
 
   const menuButton = (
@@ -137,7 +185,8 @@ export default function TreeItem({
         <SidebarMenuButton
           isActive={selectedDocumentId === item.id}
           className={cn(
-            "group/item data-[active=true]:bg-accent cursor-pointer",
+            "group/item data-[active=true]:bg-accent cursor-pointer px-2 py-1.5 h-8",
+            dropIndicator?.type === "nest" && "bg-sidebar-accent/80 ring-1 ring-primary/40",
           )}
           asChild
         >
@@ -151,33 +200,33 @@ export default function TreeItem({
     </ContextMenu>
   );
 
+  const dropLineOffset = (dropIndicator?.depth ?? depth) * SIDEBAR_INDENTATION_WIDTH + 8;
+
   return (
-    <SidebarMenuItem>
-      {hasChildren ? (
-        <Collapsible
-          className="group/collapsible"
-          open={isOpen}
-          onOpenChange={() => toggleExpanded(item.id)}
+    <SidebarMenuItem
+      ref={itemRef}
+      style={itemStyle}
+      className={cn("relative", isDragging && "opacity-50")}
+      {...dragAttributes}
+      {...dragListeners}
+    >
+      {dropIndicator?.type === "above" && (
+        <div
+          className="pointer-events-none absolute right-2 top-0 z-20 h-0.5 bg-primary"
+          style={{ left: dropLineOffset }}
         >
-          {menuButton}
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {children.map((child) => (
-                <TreeItem
-                  key={child.id}
-                  selectedDocumentId={selectedDocumentId}
-                  item={child}
-                  docs={docs}
-                  renamingDocumentId={renamingDocumentId}
-                  setRenamingDocumentId={setRenamingDocumentId}
-                />
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </Collapsible>
-      ) : (
-        menuButton
+          <div className="absolute -left-1 -top-[3px] size-2 rounded-full bg-primary" />
+        </div>
       )}
+      {dropIndicator?.type === "below" && (
+        <div
+          className="pointer-events-none absolute right-2 bottom-0 z-20 h-0.5 bg-primary"
+          style={{ left: dropLineOffset }}
+        >
+          <div className="absolute -left-1 -top-[3px] size-2 rounded-full bg-primary" />
+        </div>
+      )}
+      {menuButton}
     </SidebarMenuItem>
   );
 }
@@ -215,8 +264,8 @@ function ActionButtons({
             <PlusIcon className="size-3.5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <p>Add a page</p>
+        <TooltipContent side="right" align="center">
+          Add page inside
         </TooltipContent>
       </Tooltip>
     </div>

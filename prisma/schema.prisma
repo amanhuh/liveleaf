@@ -48,6 +48,7 @@ model Document {
   searchVector Unsupported("tsvector")?
   
   @@index([ownerId, archivedAt])
+  @@index([ownerId, parentId, archivedAt, position], map: "Document_owner_parent_archived_position_idx")
   @@index([parentId])
 }
 

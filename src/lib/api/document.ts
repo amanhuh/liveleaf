@@ -1,4 +1,4 @@
-import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, SearchDocumentItemDto, UpdateDocumentPayload, CreateDocumentInput } from "@/features/documents";
+import type { DocumentDto, DocumentListItemDto, TrashDocumentTreeItemDto, SearchDocumentItemDto, UpdateDocumentPayload, MoveDocumentPayload, CreateDocumentInput } from "@/features/documents";
 import { HttpError } from "@/lib/errors";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
@@ -29,6 +29,13 @@ export const documents = {
 
   update: (id: string, payload: UpdateDocumentPayload): Promise<DocumentDto> =>
     request(`/api/documents/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+
+  move: (id: string, payload: MoveDocumentPayload): Promise<DocumentDto> =>
+    request(`/api/documents/${id}/move`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

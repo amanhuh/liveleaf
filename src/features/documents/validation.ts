@@ -17,3 +17,17 @@ export const updateDocumentSchema = z.object({
 });
 
 export type UpdateDocumentPayload = z.infer<typeof updateDocumentSchema>;
+
+export const moveDocumentSchema = z.object({
+  parentId: z.string().cuid().nullable(),
+  beforeId: z.string().cuid().optional(),
+  afterId: z.string().cuid().optional(),
+}).refine(
+  (payload) => !(payload.beforeId && payload.afterId),
+  {
+    message: "Provide either beforeId or afterId, not both",
+    path: ["beforeId"],
+  },
+);
+
+export type MoveDocumentPayload = z.infer<typeof moveDocumentSchema>;
