@@ -158,6 +158,7 @@ function TitleEditor({
   const [title, setTitle] = useState(initialTitle);
   const localRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = inputRef || localRef;
+  const isFocusedRef = useRef(false);
 
   const debouncedSaveTitle = useMemo(
     () =>
@@ -167,9 +168,18 @@ function TitleEditor({
     [mutate],
   );
 
+  // Sync initialTitle when changing documents
   useEffect(() => {
     setTitle(initialTitle);
-  }, [initialTitle]);
+    isFocusedRef.current = false;
+  }, [documentId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Only sync server updates when not actively focused or saving
+  useEffect(() => {
+    if (!isFocusedRef.current && !updateDocument.isPending) {
+      setTitle(initialTitle);
+    }
+  }, [initialTitle, updateDocument.isPending]);
 
   useEffect(() => {
     return () => debouncedSaveTitle.cancel();
@@ -184,11 +194,18 @@ function TitleEditor({
 
   return (
     <textarea
-      placeholder="Untitled"
+      placeholder="New Page"
       rows={1}
       ref={textareaRef}
       className="w-full font-bold text-[2.75rem] leading-[1.1] tracking-[-0.03em] mb-4 text-foreground focus-visible:outline-0 resize-none overflow-hidden border-none bg-transparent shadow-none placeholder:text-muted-foreground/30"
       value={title}
+      onFocus={() => {
+        isFocusedRef.current = true;
+      }}
+      onBlur={() => {
+        isFocusedRef.current = false;
+        debouncedSaveTitle.flush();
+      }}
       onChange={(e) => {
         setTitle(e.target.value);
         debouncedSaveTitle(e.target.value);

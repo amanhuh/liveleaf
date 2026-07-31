@@ -82,6 +82,7 @@ export async function searchDocuments(
           AND d."archivedAt" IS NULL
           AND (
             d.title ILIKE search_input.query || '%'
+            OR d.title ILIKE '% ' || search_input.query || '%'
             OR COALESCE(d."plainText", '') ILIKE search_input.query || '%'
             OR COALESCE(d."plainText", '') ILIKE '% ' || search_input.query || '%'
           )
@@ -136,6 +137,7 @@ export async function searchDocuments(
           0::float8 AS fts_rank,
           GREATEST(
             similarity(COALESCE(d.title, ''), search_input.query),
+            word_similarity(search_input.query, COALESCE(d.title, '')),
             word_similarity(search_input.query, COALESCE(d."plainText", ''))
           )::float8 AS trigram_similarity,
           COALESCE(
@@ -162,11 +164,13 @@ export async function searchDocuments(
         WHERE d."ownerId" = ${ownerId}
           AND d."archivedAt" IS NULL
           AND (
-            COALESCE(d.title, '') % search_input.query
+            word_similarity(search_input.query, COALESCE(d.title, '')) > 0.45
+            OR COALESCE(d.title, '') % search_input.query
             OR COALESCE(d."plainText", '') %> search_input.query
           )
         ORDER BY
           GREATEST(
+            word_similarity(search_input.query, COALESCE(d.title, '')),
             similarity(COALESCE(d.title, ''), search_input.query),
             word_similarity(search_input.query, COALESCE(d."plainText", ''))
           ) DESC,

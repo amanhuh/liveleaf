@@ -343,7 +343,13 @@ export function useMoveDocument() {
         queryClient.setQueryData(["documents"], context.previousDocuments);
       }
 
-      toast.error(error instanceof Error ? error.message : "Could not move page");
+      console.error("[useMoveDocument Error]", error);
+      const rawMessage = error instanceof Error ? error.message : "Could not move page";
+      const errorMessage = rawMessage.includes("404") || rawMessage.includes("Not found")
+        ? "Page no longer exists or was moved elsewhere"
+        : rawMessage;
+      toast.error(`Move failed: ${errorMessage}`);
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
     onSuccess: (document, variables, context) => {
       queryClient.setQueryData(["documents", document.id], document);
@@ -362,9 +368,10 @@ export function useMoveDocument() {
 
       const movedTitle = getDocumentTitle(context?.movingDocument);
       if (variables.parentId) {
-        toast.success(`Moved "${movedTitle}" inside "${getDocumentTitle(context?.targetParent)}"`);
+        const parentTitle = getDocumentTitle(context?.targetParent);
+        toast.success(`Moved ${movedTitle} to ${parentTitle}`);
       } else {
-        toast.success(`Moved "${movedTitle}" to root`);
+        toast.success(`Moved ${movedTitle} to root`);
       }
     },
   });

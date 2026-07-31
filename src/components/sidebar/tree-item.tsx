@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { DropdownMenuEllipsis } from "./drorpdown-menu-ellipsis";
+import { DropdownMenuEllipsis } from "./dropdown-menu-ellipsis";
 import { ContextMenuEllipsis } from "./context-menu-ellipsis";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -132,7 +132,7 @@ export default function TreeItem({
       role="link"
       tabIndex={0}
       className="flex items-center w-full min-w-0 cursor-pointer"
-      style={{ paddingLeft: depth * SIDEBAR_INDENTATION_WIDTH }}
+      style={{ paddingLeft: 6 + depth * SIDEBAR_INDENTATION_WIDTH }}
       onClick={handleNavigate}
       onKeyDown={(event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -185,8 +185,15 @@ export default function TreeItem({
         <SidebarMenuButton
           isActive={selectedDocumentId === item.id}
           className={cn(
-            "group/item data-[active=true]:bg-accent cursor-pointer px-2 py-1.5 h-8",
-            dropIndicator?.type === "nest" && "bg-sidebar-accent/80 ring-1 ring-primary/40",
+            "group/item data-[active=true]:bg-accent cursor-pointer px-2 py-1.5 h-8 transition-colors",
+            dropIndicator?.type === "nest" &&
+              cn(
+                "bg-sidebar-accent/50 text-sidebar-accent-foreground font-medium z-10",
+                dropIndicator.position === "single" && "rounded-md border border-primary/70",
+                dropIndicator.position === "top" && "rounded-t-md rounded-b-none border-t border-x border-primary/70 relative z-10",
+                dropIndicator.position === "middle" && "rounded-none border-x border-primary/70 -mt-[1px] relative z-10",
+                dropIndicator.position === "bottom" && "rounded-b-md rounded-t-none border-b border-x border-primary/70 -mt-[1px] relative z-10",
+              ),
           )}
           asChild
         >
@@ -200,17 +207,20 @@ export default function TreeItem({
     </ContextMenu>
   );
 
-  const dropLineOffset = (dropIndicator?.depth ?? depth) * SIDEBAR_INDENTATION_WIDTH + 8;
+  const lineDepth = dropIndicator?.type === "between-before" || dropIndicator?.type === "between-after"
+    ? dropIndicator.depth
+    : depth;
+  const dropLineOffset = lineDepth * SIDEBAR_INDENTATION_WIDTH + 8;
 
   return (
     <SidebarMenuItem
       ref={itemRef}
       style={itemStyle}
-      className={cn("relative", isDragging && "opacity-50")}
+      className={cn("relative", isDragging && "opacity-40")}
       {...dragAttributes}
       {...dragListeners}
     >
-      {dropIndicator?.type === "above" && (
+      {dropIndicator?.type === "between-before" && (
         <div
           className="pointer-events-none absolute right-2 top-0 z-20 h-0.5 bg-primary"
           style={{ left: dropLineOffset }}
@@ -218,7 +228,7 @@ export default function TreeItem({
           <div className="absolute -left-1 -top-[3px] size-2 rounded-full bg-primary" />
         </div>
       )}
-      {dropIndicator?.type === "below" && (
+      {dropIndicator?.type === "between-after" && (
         <div
           className="pointer-events-none absolute right-2 bottom-0 z-20 h-0.5 bg-primary"
           style={{ left: dropLineOffset }}

@@ -76,11 +76,19 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         value={input}
         onValueChange={handleInputChange}
       />
-      <CommandList>
+      <CommandList className="min-h-[180px]">
         {isLoading && (
-          <div className="flex items-center justify-center p-6 text-muted-foreground gap-2 text-xs">
+          <div className="flex items-center justify-center p-8 text-muted-foreground gap-2 text-xs">
             <Loader2 className="size-4 animate-spin" />
             <span>Searching...</span>
+          </div>
+        )}
+        {!isLoading && debouncedQuery.trim().length === 0 && (
+          <div className="text-center py-10 px-4 text-muted-foreground select-none">
+            <p className="text-sm font-medium text-foreground/80">Search your pages</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              Type a title or keyword to quickly find any page.
+            </p>
           </div>
         )}
         {!isLoading && debouncedQuery.trim().length > 0 && results.length === 0 && (
@@ -123,6 +131,23 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
           </CommandGroup>
         )}
       </CommandList>
+      <div className="flex items-center justify-between px-3 py-2 border-t text-[11px] text-muted-foreground bg-muted/20 select-none">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/60 font-mono text-[10px] shadow-2xs">↑</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/60 font-mono text-[10px] shadow-2xs">↓</kbd>
+            <span className="ml-0.5">navigate</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/60 font-mono text-[10px] shadow-2xs">↵</kbd>
+            <span className="ml-0.5">select</span>
+          </span>
+        </div>
+        <span className="flex items-center gap-1">
+          <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/60 font-mono text-[10px] shadow-2xs">esc</kbd>
+          <span className="ml-0.5">exit</span>
+        </span>
+      </div>
     </CommandDialog>
   );
 }

@@ -10,13 +10,15 @@ export function withApiHandler<TParams = Record<string, string>>(
       const params = await context.params;
       return await handler(req, params);
     } catch (error) {
+      console.error("[API Handler Error]", req.method, req.url, error);
       if (error instanceof HttpError) {
         return Response.json({ error: error.message }, { status: error.status });
       }
       if (error instanceof ZodError) {
-        return Response.json({ error: error.flatten() }, { status: 400 });
+        const message = error.issues.map((i) => i.message).join("; ");
+        return Response.json({ error: message }, { status: 400 });
       }
-      return Response.json({ error: "Internal Server Error" }, { status: 500 });
+      return Response.json({ error: error instanceof Error ? error.message : "Internal Server Error" }, { status: 500 });
     }
   };
 }

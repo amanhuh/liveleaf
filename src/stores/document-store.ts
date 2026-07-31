@@ -10,12 +10,10 @@ const initialState = {
 };
 
 interface DocumentStore {
-  currentDocumentId: string | null;
   expandedDocumentIds: string[];
   lastDocumentCount: number;
   sidebarWidth: number;
 
-  setCurrentDocumentId: (id: string) => void;
   toggleExpanded: (id: string) => void;
   expandDocument: (id: string) => void;
   setLastDocumentCount: (count: number) => void;
@@ -26,14 +24,9 @@ interface DocumentStore {
 export const useDocumentStore = create<DocumentStore>()(
   persist(
     (set) => ({
-      currentDocumentId: null,
       expandedDocumentIds: initialState.expandedDocumentIds,
       lastDocumentCount: initialState.lastDocumentCount,
       sidebarWidth: initialState.sidebarWidth,
-      setCurrentDocumentId: (id) =>
-        set({
-          currentDocumentId: id,
-        }),
       setLastDocumentCount: (count) =>
         set({
           lastDocumentCount: count,
@@ -61,7 +54,6 @@ export const useDocumentStore = create<DocumentStore>()(
     {
       name: "document-store",
       partialize: (state) => ({
-        currentDocumentId: state.currentDocumentId,
         expandedDocumentIds: state.expandedDocumentIds,
         lastDocumentCount: state.lastDocumentCount,
         sidebarWidth: state.sidebarWidth,

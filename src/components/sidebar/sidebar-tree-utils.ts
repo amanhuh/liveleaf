@@ -1,5 +1,4 @@
-import { arrayMove } from "@dnd-kit/sortable";
-import type { DocumentListItemDto, MoveDocumentPayload } from "@/features/documents";
+import type { DocumentListItemDto } from "@/features/documents";
 
 export type FlatSidebarDocument = {
   document: DocumentListItemDto;
@@ -8,16 +7,21 @@ export type FlatSidebarDocument = {
   depth: number;
 };
 
-export type ProjectedSidebarMove = MoveDocumentPayload & {
+export type ProjectedSidebarMove = {
+  parentId: string | null;
+  beforeId?: string;
+  afterId?: string;
+  dropType: "between" | "nest";
   depth: number;
   overId: string;
-  projectedIndex: number;
+  insertionAnchor: { itemId: string; position: "above" | "below" };
 };
 
-export type DropIndicatorState = {
-  type: "above" | "below" | "nest";
-  depth: number;
-} | null;
+export type DropIndicatorState =
+  | { type: "between-before"; depth: number }
+  | { type: "between-after"; depth: number }
+  | { type: "nest"; position: "single" | "top" | "middle" | "bottom" }
+  | null;
 
 export const SIDEBAR_INDENTATION_WIDTH = 12;
 
@@ -48,15 +52,8 @@ export function buildVisibleSidebarTree(
 
   const walk = (parentId: string | null, depth: number) => {
     const children = byParentId.get(parentId) ?? [];
-
     for (const child of children) {
-      visibleItems.push({
-        document: child,
-        id: child.id,
-        parentId: child.parentId,
-        depth,
-      });
-
+      visibleItems.push({ document: child, id: child.id, parentId: child.parentId, depth });
       if (expanded.has(child.id)) {
         walk(child.id, depth + 1);
       }
@@ -71,145 +68,173 @@ export function getProjectedMove(
   visibleItems: FlatSidebarDocument[],
   activeId: string,
   overId: string,
+  mouseY: number,
+  overItemRect: { top: number; bottom: number; height: number },
   dragOffsetX: number,
 ): ProjectedSidebarMove | null {
-  const activeIndex = visibleItems.findIndex((item) => item.id === activeId);
   const overIndex = visibleItems.findIndex((item) => item.id === overId);
+  const activeIndex = visibleItems.findIndex((item) => item.id === activeId);
+  if (overIndex === -1 || activeIndex === -1) return null;
 
-  if (activeIndex === -1 || overIndex === -1) return null;
-
-  const movedItems = arrayMove(visibleItems, activeIndex, overIndex);
-  const projectedIndex = movedItems.findIndex((item) => item.id === activeId);
+  const overItem = visibleItems[overIndex];
   const activeItem = visibleItems[activeIndex];
-  const previousItem = movedItems[projectedIndex - 1] ?? null;
-  const nextItem = movedItems[projectedIndex + 1] ?? null;
-  const projectedDepth = getProjectedDepth(
-    activeItem.depth,
-    dragOffsetX,
-    previousItem,
-    nextItem,
-  );
-  const parentId = getProjectedParentId(movedItems, projectedIndex, projectedDepth);
-  const previousSibling = findPreviousSibling(movedItems, projectedIndex, projectedDepth, parentId);
-  const nextSibling = findNextSibling(movedItems, projectedIndex, projectedDepth, parentId);
 
-  if (nextSibling) {
+  // Direct mouse Y percentage relative to hovered item rect (0.0 = top edge, 1.0 = bottom edge)
+  const relativeY = mouseY - overItemRect.top;
+  const percentage = overItemRect.height > 0 ? relativeY / overItemRect.height : 0.5;
+
+  // Middle 65% (0.175 to 0.825) => nest into overId
+  if (percentage >= 0.175 && percentage <= 0.825) {
     return {
-      parentId,
-      beforeId: nextSibling.id,
-      depth: projectedDepth,
+      parentId: overId,
+      dropType: "nest",
+      depth: overItem.depth + 1,
       overId,
-      projectedIndex,
+      insertionAnchor: { itemId: overId, position: "above" },
     };
   }
 
-  if (previousSibling) {
+  // Top 17.5% (< 0.175) => insert before overId. Bottom 17.5% (> 0.825) => insert after overId.
+  const insertBefore = percentage < 0.175;
+
+  const itemsWithoutActive = visibleItems.filter((item) => item.id !== activeId);
+  const overIndexInFiltered = itemsWithoutActive.findIndex((item) => item.id === overId);
+  if (overIndexInFiltered === -1) return null;
+
+  const previousItem = insertBefore
+    ? (itemsWithoutActive[overIndexInFiltered - 1] ?? null)
+    : (itemsWithoutActive[overIndexInFiltered] ?? null);
+
+  const nextItem = insertBefore
+    ? (itemsWithoutActive[overIndexInFiltered] ?? null)
+    : (itemsWithoutActive[overIndexInFiltered + 1] ?? null);
+
+  const dragDepth = Math.round(dragOffsetX / SIDEBAR_INDENTATION_WIDTH);
+  const maxDepth = previousItem ? previousItem.depth + 1 : 0;
+  const minDepth = nextItem ? nextItem.depth : 0;
+  const projectedDepth = Math.min(Math.max(activeItem.depth + dragDepth, minDepth), maxDepth);
+
+  const insertionRefIndex = insertBefore ? overIndexInFiltered : overIndexInFiltered + 1;
+
+  let parentId: string | null = null;
+  if (projectedDepth > 0) {
+    for (let i = insertionRefIndex - 1; i >= 0; i--) {
+      const item = itemsWithoutActive[i];
+      if (item.depth === projectedDepth - 1) {
+        parentId = item.id;
+        break;
+      }
+      if (item.depth < projectedDepth - 1) break;
+    }
+  }
+
+  if (!insertBefore && parentId === overId) {
+    let lastInSubtree = overId;
+    for (let i = overIndex + 1; i < visibleItems.length; i++) {
+      if (visibleItems[i].depth <= overItem.depth) break;
+      lastInSubtree = visibleItems[i].id;
+    }
     return {
-      parentId,
-      afterId: previousSibling.id,
-      depth: projectedDepth,
+      parentId: overId,
+      dropType: "between",
+      depth: overItem.depth + 1,
       overId,
-      projectedIndex,
+      insertionAnchor: { itemId: lastInSubtree, position: "below" },
     };
+  }
+
+  let beforeId: string | undefined;
+  let afterId: string | undefined;
+
+  if (insertBefore) {
+    for (let i = insertionRefIndex; i < itemsWithoutActive.length; i++) {
+      const item = itemsWithoutActive[i];
+      if (item.depth < projectedDepth) break;
+      if (item.depth === projectedDepth && item.parentId === parentId) {
+        beforeId = item.id;
+        break;
+      }
+    }
+  } else {
+    for (let i = insertionRefIndex - 1; i >= 0; i--) {
+      const item = itemsWithoutActive[i];
+      if (item.depth < projectedDepth) break;
+      if (item.depth === projectedDepth && item.parentId === parentId) {
+        afterId = item.id;
+        break;
+      }
+    }
+  }
+
+  let anchorItemId: string;
+  let anchorPosition: "above" | "below";
+
+  if (insertBefore) {
+    anchorItemId = overId;
+    anchorPosition = "above";
+  } else {
+    let lastInSubtree = overId;
+    for (let i = overIndex + 1; i < visibleItems.length; i++) {
+      if (visibleItems[i].depth <= overItem.depth) break;
+      lastInSubtree = visibleItems[i].id;
+    }
+    anchorItemId = lastInSubtree;
+    anchorPosition = "below";
   }
 
   return {
     parentId,
+    beforeId,
+    afterId,
+    dropType: "between",
     depth: projectedDepth,
     overId,
-    projectedIndex,
+    insertionAnchor: { itemId: anchorItemId, position: anchorPosition },
   };
 }
 
 export function getDropIndicator(
   itemId: string,
   projectedMove: ProjectedSidebarMove | null,
-  visibleItems: FlatSidebarDocument[],
+  visibleItems: FlatSidebarDocument[] = [],
 ): DropIndicatorState {
   if (!projectedMove) return null;
 
-  const itemIndex = visibleItems.findIndex((item) => item.id === itemId);
-  if (itemIndex === -1) return null;
+  if (projectedMove.dropType === "nest") {
+    const overIndex = visibleItems.findIndex((item) => item.id === projectedMove.overId);
+    if (overIndex !== -1) {
+      const overItem = visibleItems[overIndex];
+      const subtreeItems: FlatSidebarDocument[] = [overItem];
 
-  if (projectedMove.parentId === itemId) {
-    return { type: "nest", depth: projectedMove.depth };
-  }
+      for (let i = overIndex + 1; i < visibleItems.length; i++) {
+        if (visibleItems[i].depth <= overItem.depth) break;
+        subtreeItems.push(visibleItems[i]);
+      }
 
-  if (projectedMove.projectedIndex === itemIndex) {
-    return { type: "above", depth: projectedMove.depth };
-  }
-
-  if (
-    projectedMove.projectedIndex === visibleItems.length &&
-    itemIndex === visibleItems.length - 1
-  ) {
-    return { type: "below", depth: projectedMove.depth };
-  }
-
-  if (projectedMove.projectedIndex === itemIndex + 1) {
-    return { type: "below", depth: projectedMove.depth };
-  }
-
-  return null;
-}
-
-function getProjectedDepth(
-  activeDepth: number,
-  dragOffsetX: number,
-  previousItem: FlatSidebarDocument | null,
-  nextItem: FlatSidebarDocument | null,
-) {
-  const dragDepth = Math.round(dragOffsetX / SIDEBAR_INDENTATION_WIDTH);
-  const projectedDepth = activeDepth + dragDepth;
-  const maxDepth = previousItem ? previousItem.depth + 1 : 0;
-  const minDepth = nextItem ? nextItem.depth : 0;
-
-  return Math.min(Math.max(projectedDepth, minDepth), maxDepth);
-}
-
-function getProjectedParentId(
-  items: FlatSidebarDocument[],
-  projectedIndex: number,
-  projectedDepth: number,
-) {
-  if (projectedDepth === 0) return null;
-
-  for (let index = projectedIndex - 1; index >= 0; index--) {
-    const item = items[index];
-
-    if (item.depth === projectedDepth - 1) {
-      return item.id;
+      const itemSubtreeIndex = subtreeItems.findIndex((item) => item.id === itemId);
+      if (itemSubtreeIndex !== -1) {
+        if (subtreeItems.length === 1) {
+          return { type: "nest", position: "single" };
+        }
+        if (itemSubtreeIndex === 0) {
+          return { type: "nest", position: "top" };
+        }
+        if (itemSubtreeIndex === subtreeItems.length - 1) {
+          return { type: "nest", position: "bottom" };
+        }
+        return { type: "nest", position: "middle" };
+      }
     }
   }
 
-  return null;
-}
-
-function findPreviousSibling(
-  items: FlatSidebarDocument[],
-  projectedIndex: number,
-  projectedDepth: number,
-  parentId: string | null,
-) {
-  for (let index = projectedIndex - 1; index >= 0; index--) {
-    const item = items[index];
-    if (item.depth < projectedDepth) return null;
-    if (item.depth === projectedDepth && item.parentId === parentId) return item;
-  }
-
-  return null;
-}
-
-function findNextSibling(
-  items: FlatSidebarDocument[],
-  projectedIndex: number,
-  projectedDepth: number,
-  parentId: string | null,
-) {
-  for (let index = projectedIndex + 1; index < items.length; index++) {
-    const item = items[index];
-    if (item.depth < projectedDepth) return null;
-    if (item.depth === projectedDepth && item.parentId === parentId) return item;
+  if (projectedMove.dropType === "between") {
+    const { itemId: anchorId, position } = projectedMove.insertionAnchor;
+    if (anchorId === itemId) {
+      return {
+        type: position === "above" ? "between-before" : "between-after",
+        depth: projectedMove.depth,
+      };
+    }
   }
 
   return null;

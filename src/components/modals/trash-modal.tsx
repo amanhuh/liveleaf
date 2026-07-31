@@ -96,26 +96,23 @@ export function TrashModal({ open, onOpenChange }: TrashModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl p-0 overflow-hidden gap-0">
-        <DialogHeader className="p-4 border-b">
-          <DialogTitle className="text-base font-semibold flex items-center gap-2">
-            <Trash2 className="size-4 text-muted-foreground" />
-            Trash
-          </DialogTitle>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Trash</DialogTitle>
         </DialogHeader>
 
-        <div className="p-3 border-b bg-muted/30">
+        <div className="p-3 border-b bg-muted/20">
           <div className="relative flex items-center">
             <Search className="absolute left-3 size-4 text-muted-foreground" />
             <Input
               placeholder="Filter trash pages..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-transparent h-9 border-border/60"
+              className="pl-9 bg-transparent h-9 border-border/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none shadow-none"
             />
           </div>
         </div>
 
-        <div className="max-h-[380px] overflow-y-auto overscroll-contain p-2">
+        <div className="max-h-[380px] overflow-y-auto overscroll-contain p-3">
           {isLoading ? (
             <div className="flex items-center justify-center p-8 text-muted-foreground gap-2">
               <Loader2 className="size-4 animate-spin" />
@@ -211,6 +208,9 @@ export function TrashModal({ open, onOpenChange }: TrashModalProps) {
               })}
             </div>
           )}
+        </div>
+        <div className="flex items-center justify-between px-3 py-2 border-t text-[11px] text-muted-foreground/70 bg-muted/20 select-none">
+          <span>Items in trash are permanently deleted after 30 days.</span>
         </div>
       </DialogContent>
     </Dialog>

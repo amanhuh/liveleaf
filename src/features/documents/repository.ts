@@ -535,6 +535,18 @@ export async function deleteDocument(id: string, ownerId: string) {
   });
 }
 
+export async function purgeExpiredTrashDocuments(days: number = 30) {
+  const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const result = await prisma.document.deleteMany({
+    where: {
+      archivedAt: {
+        lt: cutoffDate,
+      },
+    },
+  });
+  return result.count;
+}
+
 export interface SearchDocumentItem {
   id: string;
   title: string | null;
@@ -642,4 +654,4 @@ export async function searchActiveDocuments(
       vm."updatedAt" DESC
     LIMIT ${limit};
   `;
-}
+};

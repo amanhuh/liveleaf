@@ -4,10 +4,12 @@ import * as React from "react";
 import { useState } from "react";
 import {
   closestCenter,
+  pointerWithin,
   DndContext,
   DragEndEvent,
   DragMoveEvent,
   DragOverEvent,
+  DragOverlay,
   DragStartEvent,
   KeyboardSensor,
   PointerSensor,
@@ -135,25 +137,75 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setProjectedMove(null);
   };
 
-  const handleDragMove = (event: DragMoveEvent) => {
-    updateProjectedMove(String(event.active.id), event.over ? String(event.over.id) : null, event.delta.x);
-  };
+  const autoExpandTimerRef = React.useRef<number | null>(null);
+  const autoExpandTargetIdRef = React.useRef<string | null>(null);
 
-  const handleDragOver = (event: DragOverEvent) => {
-    updateProjectedMove(String(event.active.id), event.over ? String(event.over.id) : null, event.delta.x);
-  };
+  const clearAutoExpand = React.useCallback(() => {
+    if (autoExpandTimerRef.current) {
+      window.clearTimeout(autoExpandTimerRef.current);
+      autoExpandTimerRef.current = null;
+    }
+    autoExpandTargetIdRef.current = null;
+  }, []);
+
+  const scheduleAutoExpand = React.useCallback(
+    (targetId: string) => {
+      if (autoExpandTargetIdRef.current === targetId) return;
+      clearAutoExpand();
+      autoExpandTargetIdRef.current = targetId;
+      autoExpandTimerRef.current = window.setTimeout(() => {
+        expandDocument(targetId);
+        clearAutoExpand();
+      }, 600);
+    },
+    [expandDocument, clearAutoExpand],
+  );
 
   const updateProjectedMove = (
     activeId: string,
     overId: string | null,
-    offsetX: number,
+    mouseY: number,
+    overRect: { top: number; bottom: number; height: number } | undefined,
+    dragOffsetX: number,
   ) => {
-    if (!overId || activeId === overId) {
+    if (!overId) {
+      clearAutoExpand();
+      // Mouse is in empty space below the list -> fall back to placing at bottom of root
+      if (visibleItems.length > 0) {
+        const lastVisible = visibleItems[visibleItems.length - 1];
+        if (activeId !== lastVisible.id) {
+          // Find the last root-level item to set as afterId
+          const rootItems = visibleItems.filter((i) => i.depth === 0 && i.id !== activeId);
+          const lastRoot = rootItems[rootItems.length - 1];
+          setProjectedMove({
+            parentId: null,
+            afterId: lastRoot?.id,
+            dropType: "between",
+            depth: 0,
+            overId: lastVisible.id,
+            insertionAnchor: { itemId: lastVisible.id, position: "below" },
+          });
+          return;
+        }
+      }
       setProjectedMove(null);
       return;
     }
 
-    const move = getProjectedMove(visibleItems, activeId, overId, offsetX);
+    if (activeId === overId || !overRect) {
+      clearAutoExpand();
+      setProjectedMove(null);
+      return;
+    }
+
+    // Auto-expand collapsed parent after 600ms of hovering
+    if (!expandedDocumentIds.includes(overId)) {
+      scheduleAutoExpand(overId);
+    } else {
+      clearAutoExpand();
+    }
+
+    const move = getProjectedMove(visibleItems, activeId, overId, mouseY, overRect, dragOffsetX);
     if (!move || wouldMoveInsideDescendant(documents, activeId, move.parentId)) {
       setProjectedMove(null);
       return;
@@ -162,9 +214,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setProjectedMove(move);
   };
 
+  const getEventMouseY = (event: DragMoveEvent | DragOverEvent) => {
+    const activator = event.activatorEvent as PointerEvent | undefined;
+    const initialY = activator?.clientY ?? 0;
+    return initialY + event.delta.y;
+  };
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    const overRect = event.over?.rect;
+    updateProjectedMove(
+      String(event.active.id),
+      event.over ? String(event.over.id) : null,
+      getEventMouseY(event),
+      overRect ?? undefined,
+      event.delta.x,
+    );
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const overRect = event.over?.rect;
+    updateProjectedMove(
+      String(event.active.id),
+      event.over ? String(event.over.id) : null,
+      getEventMouseY(event),
+      overRect ?? undefined,
+      event.delta.x,
+    );
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    clearAutoExpand();
     const activeId = String(event.active.id);
-    const overId = event.over ? String(event.over.id) : null;
+    const lastProjectedMove = projectedMove;
     suppressNavigationRef.current = true;
     window.setTimeout(() => {
       suppressNavigationRef.current = false;
@@ -172,44 +253,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setActiveDragId(null);
     setProjectedMove(null);
 
-    if (!overId || activeId === overId) return;
-
-    const projectedMoveResult = getProjectedMove(
-      visibleItems,
-      activeId,
-      overId,
-      event.delta.x,
-    );
-
-    if (!projectedMoveResult || wouldMoveInsideDescendant(documents, activeId, projectedMoveResult.parentId)) {
-      return;
-    }
+    if (!lastProjectedMove) return;
+    if (wouldMoveInsideDescendant(documents, activeId, lastProjectedMove.parentId)) return;
 
     moveDocument.mutate({
       id: activeId,
-      parentId: projectedMoveResult.parentId,
-      beforeId: projectedMoveResult.beforeId,
-      afterId: projectedMoveResult.afterId,
+      parentId: lastProjectedMove.parentId,
+      beforeId: lastProjectedMove.beforeId,
+      afterId: lastProjectedMove.afterId,
     });
 
-    if (projectedMoveResult.parentId) {
-      expandDocument(projectedMoveResult.parentId);
+    if (lastProjectedMove.parentId) {
+      expandDocument(lastProjectedMove.parentId);
     }
   };
 
   const handleDragCancel = () => {
-    suppressNavigationRef.current = false;
+    clearAutoExpand();
     setActiveDragId(null);
     setProjectedMove(null);
   };
 
   return (
     <Sidebar {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="py-2.5 px-2.5">
         <SidebarMenu>
           <SidebarMenuItem>
             {isSessionLoading ? (
-              <SidebarMenuButton size="default" className="pointer-events-none">
+              <SidebarMenuButton size="default" className="pointer-events-none py-1.5 h-auto">
                 <div className="flex aspect-square size-8 animate-pulse rounded-lg bg-sidebar-accent" />
                 <div className="grid flex-1 space-y-1.5 text-left leading-tight">
                   <div className="h-3 w-16 animate-pulse rounded bg-sidebar-accent" />
@@ -222,7 +293,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton
                     size="default"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    className="py-1.5 h-auto data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <div className="flex aspect-square size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground text-xs font-semibold">
                       {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
@@ -271,40 +342,64 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </button>
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-0">
               {isDocsLoading ? (
                 <SidebarSkeleton count={hydrated ? lastDocumentCount : 3} />
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={handleDragStart}
-                  onDragMove={handleDragMove}
-                  onDragOver={handleDragOver}
-                  onDragEnd={handleDragEnd}
-                  onDragCancel={handleDragCancel}
-                >
-                  <SortableContext
-                    items={visibleItems.map((item) => item.id)}
-                    strategy={verticalListSortingStrategy}
+              ) : (() => {
+                const activeDragItem = visibleItems.find((item) => item.id === activeDragId);
+                const draggedSubtree = getDraggedSubtree(activeDragId, visibleItems, documents);
+                const activeDragIdSet = new Set(draggedSubtree.map((item) => item.id));
+
+                return (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={pointerWithin}
+                    onDragStart={handleDragStart}
+                    onDragMove={handleDragMove}
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
+                    onDragCancel={handleDragCancel}
                   >
-                    {visibleItems.map((item) => (
-                      <SortableSidebarItem
-                        key={item.id}
-                        item={item}
-                        docs={documents}
-                        selectedDocumentId={selectedDocumentId}
-                        renamingDocumentId={renamingDocumentId}
-                        setRenamingDocumentId={setRenamingDocumentId}
-                        disabled={renamingDocumentId !== null}
-                        isActiveDragItem={activeDragId === item.id}
-                        dropIndicator={getDropIndicator(item.id, projectedMove, visibleItems)}
-                        suppressNavigationRef={suppressNavigationRef}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              )}
+                    <SortableContext
+                      items={visibleItems.map((item) => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {visibleItems.map((item) => (
+                        <SortableSidebarItem
+                          key={item.id}
+                          item={item}
+                          docs={documents}
+                          selectedDocumentId={selectedDocumentId}
+                          renamingDocumentId={renamingDocumentId}
+                          setRenamingDocumentId={setRenamingDocumentId}
+                          disabled={renamingDocumentId !== null}
+                          isActiveDragItem={activeDragIdSet.has(item.id)}
+                          dropIndicator={getDropIndicator(item.id, projectedMove, visibleItems)}
+                          suppressNavigationRef={suppressNavigationRef}
+                        />
+                      ))}
+                    </SortableContext>
+                    <DragOverlay dropAnimation={{ duration: 150, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
+                      {activeDragItem && (
+                        <div className="opacity-20 shadow-sm rounded-md bg-sidebar/70 border border-sidebar-border/40 backdrop-blur-none pointer-events-none py-1 overflow-hidden">
+                          {draggedSubtree.map((item) => (
+                            <TreeItem
+                              key={item.id}
+                              selectedDocumentId={selectedDocumentId}
+                              item={item.document}
+                              docs={documents}
+                              depth={item.depth - activeDragItem.depth}
+                              renamingDocumentId={null}
+                              setRenamingDocumentId={() => {}}
+                              isDragging={false}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </DragOverlay>
+                  </DndContext>
+                );
+              })()}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -387,12 +482,11 @@ function SortableSidebarItem({
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
     isDragging,
   } = useSortable({
     id: item.id,
     disabled,
+    animateLayoutChanges: () => false,
   });
 
   return (
@@ -407,11 +501,6 @@ function SortableSidebarItem({
       dropIndicator={dropIndicator}
       suppressNavigationRef={suppressNavigationRef}
       itemRef={setNodeRef}
-      itemStyle={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 10 : undefined,
-      }}
       dragAttributes={attributes}
       dragListeners={listeners}
     />
@@ -433,5 +522,44 @@ function wouldMoveInsideDescendant(
       : undefined;
   }
 
+  return false;
+}
+
+function getDraggedSubtree(
+  activeId: string | null,
+  visibleItems: FlatSidebarDocument[],
+  docs: DocumentListItemDto[]
+): FlatSidebarDocument[] {
+  if (!activeId) return [];
+
+  const activeIndex = visibleItems.findIndex((item) => item.id === activeId);
+  if (activeIndex === -1) return [];
+
+  const activeItem = visibleItems[activeIndex];
+  const result: FlatSidebarDocument[] = [activeItem];
+
+  for (let i = activeIndex + 1; i < visibleItems.length; i++) {
+    const item = visibleItems[i];
+    if (isDescendantOf(item.document, activeId, docs)) {
+      result.push(item);
+    } else {
+      break;
+    }
+  }
+
+  return result;
+}
+
+function isDescendantOf(
+  doc: DocumentListItemDto,
+  ancestorId: string,
+  docs: DocumentListItemDto[]
+): boolean {
+  let currentParentId = doc.parentId;
+  while (currentParentId) {
+    if (currentParentId === ancestorId) return true;
+    const parentDoc = docs.find((d) => d.id === currentParentId);
+    currentParentId = parentDoc?.parentId ?? null;
+  }
   return false;
 }

@@ -77,7 +77,7 @@ export default function Tiptap({ document, content }: TiptapProps) {
     editorProps: {
       attributes: {
         class:
-          "min-h-[60vh] focus:outline-none prose prose-neutral dark:prose-invert max-w-none",
+          "min-h-[60vh] focus:outline-none prose dark:prose-invert max-w-none",
       },
     },
   });
