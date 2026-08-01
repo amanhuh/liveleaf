@@ -47,6 +47,7 @@ model Document {
   children     Document[] @relation("DocumentHierarchy")
   archivedAt   DateTime?
   position     Float      @default(0)
+  searchVector Unsupported("tsvector")?
   
   @@index([ownerId, archivedAt])
   @@index([ownerId, isFavorite, archivedAt])

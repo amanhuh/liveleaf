@@ -106,6 +106,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   useKeyboardShortcuts({
     onNewPage: () => createDocument.mutate({}),
     onSearch: () => setIsSearchOpen(true),
+    onOpenTrash: () => setIsTrashOpen(true),
   });
 
   const lastDocumentCount = useDocumentStore((state) => state.lastDocumentCount);

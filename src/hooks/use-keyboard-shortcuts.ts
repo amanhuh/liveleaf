@@ -19,18 +19,17 @@ export function useKeyboardShortcuts({
 }: ShortcutHandlers) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const isMac =
+        typeof navigator !== "undefined" &&
+        navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const modifier = isMac ? e.metaKey : e.ctrlKey;
 
       if (!modifier) return;
 
-      const activeElement = document.activeElement;
-      const isEditingContent =
-        activeElement?.tagName === "INPUT" ||
-        activeElement?.tagName === "TEXTAREA" ||
-        activeElement?.getAttribute("contenteditable") === "true";
+      const key = e.key.toLowerCase();
 
-      if ((e.key.toLowerCase() === "k" || e.key.toLowerCase() === "p") && !e.shiftKey && !e.altKey) {
+      // Search Pages (⌘K / Ctrl+K or ⌘P / Ctrl+P)
+      if ((key === "k" || key === "p") && !e.shiftKey && !e.altKey) {
         if (onSearch) {
           e.preventDefault();
           onSearch();
@@ -38,13 +37,17 @@ export function useKeyboardShortcuts({
         }
       }
 
-      if (e.key.toLowerCase() === "n" && !e.shiftKey && !e.altKey) {
-        e.preventDefault();
-        onNewPage?.();
-        return;
+      // Create New Page (⌘N / Ctrl+N)
+      if (key === "n" && !e.shiftKey && !e.altKey) {
+        if (onNewPage) {
+          e.preventDefault();
+          onNewPage();
+          return;
+        }
       }
 
-      if (e.key.toLowerCase() === "t" && e.shiftKey) {
+      // Open Trash Modal (⌘Shift+T / Ctrl+Shift+T)
+      if (key === "t" && e.shiftKey) {
         if (onOpenTrash) {
           e.preventDefault();
           onOpenTrash();
@@ -52,7 +55,8 @@ export function useKeyboardShortcuts({
         }
       }
 
-      if (e.key === "Backspace" && e.shiftKey) {
+      // Move Active Page to Trash (⌘Shift+Backspace or ⌘Shift+Del / Ctrl+Shift+Del)
+      if ((e.key === "Backspace" || e.key === "Delete") && e.shiftKey) {
         if (onMoveToTrash) {
           e.preventDefault();
           onMoveToTrash();
@@ -60,7 +64,8 @@ export function useKeyboardShortcuts({
         }
       }
 
-      if (e.key.toLowerCase() === "r" && e.shiftKey) {
+      // Focus/Rename Page Title (⌘Shift+R / Ctrl+Shift+R)
+      if (key === "r" && e.shiftKey) {
         if (onRename) {
           e.preventDefault();
           onRename();

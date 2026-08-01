@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import Tiptap from "@/components/editor/editor";
 import {
   Breadcrumb,
@@ -185,6 +186,7 @@ export default function DocumentView() {
   };
 
   useKeyboardShortcuts({
+    onNewPage: () => createDocument.mutate({}),
     onMoveToTrash: handleMoveToTrash,
     onRename: () => {
       titleInputRef.current?.focus();
@@ -241,28 +243,72 @@ export default function DocumentView() {
           <SidebarTrigger className="-ml-1" />
           <Breadcrumb>
             <BreadcrumbList>
-              {breadcrumb.map((doc, index) => (
-                <Fragment key={doc.id}>
-                  <BreadcrumbItem className="hidden md:block">
-                    {index === breadcrumb.length - 1 ? (
-                      <BreadcrumbPage>
-                        <span className="max-w-[120px] truncate block" title={doc.title}>
-                          {doc.title.trim() ? doc.title : "New Page"}
-                        </span>
-                      </BreadcrumbPage>
-                    ) : (
-                      <BreadcrumbLink asChild>
-                        <Link href={`/d/${doc.id}`}>
-                          <span className="max-w-[120px] truncate block" title={doc.title}>
+              {breadcrumb.map((doc, index) => {
+                const isFirst = index === 0;
+                const isLast = index === breadcrumb.length - 1;
+                const isIntermediate = !isFirst && !isLast;
+                const hasManyItems = breadcrumb.length > 2;
+
+                return (
+                  <Fragment key={doc.id}>
+                    {/* Ellipsis placeholder after root item on mobile */}
+                    {hasManyItems && isFirst && (
+                      <>
+                        <BreadcrumbItem className="inline-flex sm:hidden">
+                          <BreadcrumbPage>
+                            <span className="max-w-[70px] truncate block text-xs" title={doc.title}>
+                              {doc.title.trim() ? doc.title : "New Page"}
+                            </span>
+                          </BreadcrumbPage>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator className="inline-flex sm:hidden" />
+                        <BreadcrumbItem className="inline-flex sm:hidden">
+                          <span className="text-muted-foreground/70 text-xs px-0.5 select-none">...</span>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator className="inline-flex sm:hidden" />
+                      </>
+                    )}
+
+                    <BreadcrumbItem
+                      className={cn(
+                        "inline-flex items-center",
+                        hasManyItems && isFirst && "hidden sm:inline-flex",
+                        hasManyItems && isIntermediate && "hidden sm:inline-flex"
+                      )}
+                    >
+                      {isLast ? (
+                        <BreadcrumbPage>
+                          <span
+                            className="max-w-[90px] xs:max-w-[120px] sm:max-w-[160px] truncate block text-xs sm:text-sm font-medium"
+                            title={doc.title}
+                          >
                             {doc.title.trim() ? doc.title : "New Page"}
                           </span>
-                        </Link>
-                      </BreadcrumbLink>
+                        </BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink asChild>
+                          <Link href={`/d/${doc.id}`}>
+                            <span
+                              className="max-w-[80px] xs:max-w-[100px] sm:max-w-[140px] truncate block text-xs sm:text-sm"
+                              title={doc.title}
+                            >
+                              {doc.title.trim() ? doc.title : "New Page"}
+                            </span>
+                          </Link>
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                    {!isLast && (
+                      <BreadcrumbSeparator
+                        className={cn(
+                          hasManyItems && isFirst && "hidden sm:inline-flex",
+                          hasManyItems && isIntermediate && "hidden sm:inline-flex"
+                        )}
+                      />
                     )}
-                  </BreadcrumbItem>
-                  {index !== breadcrumb.length - 1 && <BreadcrumbSeparator />}
-                </Fragment>
-              ))}
+                  </Fragment>
+                );
+              })}
             </BreadcrumbList>
           </Breadcrumb>
         </div>

@@ -9,7 +9,7 @@ function hasSessionCookie(request: NextRequest): boolean {
 }
 
 export function proxy(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
+  const { pathname, search, searchParams } = request.nextUrl;
 
   const isProtectedRoute = pathname.startsWith("/d");
   const isAuthRoute =
@@ -18,7 +18,6 @@ export function proxy(request: NextRequest) {
   const isAuthenticated = hasSessionCookie(request);
 
   if (pathname === "/" && isAuthenticated) {
-
     return NextResponse.redirect(new URL("/d", request.url));
   }
 
@@ -28,7 +27,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  if (isAuthRoute && isAuthenticated) {
+  // Allow users with stale cookies landing on sign-in via ?next= to render sign-in page without looping back
+  if (isAuthRoute && isAuthenticated && !searchParams.has("next")) {
     return NextResponse.redirect(new URL("/d", request.url));
   }
 

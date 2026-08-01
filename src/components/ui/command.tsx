@@ -56,7 +56,7 @@ function CommandDialog({
       </DialogHeader>
       <DialogContent
         className={cn(
-          "max-w-xl p-0 overflow-hidden gap-0 rounded-xl!",
+          "w-[calc(100vw-1.5rem)] sm:max-w-[600px] sm:w-[600px] p-0 overflow-hidden gap-0 rounded-2xl!",
           className
         )}
         showCloseButton={showCloseButton}

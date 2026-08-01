@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Leaf, ArrowLeft } from "lucide-react";
+import { constructMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "LiveLeaf — Sign in",
+export const metadata: Metadata = constructMetadata({
+  title: "Sign in — LiveLeaf",
   description: "Sign in or create an account to start writing with LiveLeaf.",
-};
+  noIndex: true,
+});
 
 export default function AuthLayout({
   children,

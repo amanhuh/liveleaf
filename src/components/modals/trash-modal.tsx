@@ -100,19 +100,19 @@ export function TrashModal({ open, onOpenChange }: TrashModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden gap-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-[640px] sm:w-[640px] p-0 overflow-hidden gap-0 rounded-2xl">
         <DialogHeader className="sr-only">
           <DialogTitle>Trash</DialogTitle>
         </DialogHeader>
 
         <div className="p-3 border-b bg-muted/20">
           <div className="relative flex items-center">
-            <Search className="absolute left-3 size-4 text-muted-foreground" />
+            <Search className="absolute left-3 size-4 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Filter trash pages..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-transparent h-9 border-border/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none shadow-none"
+              className="pl-9 pr-10 bg-transparent h-9 border-border/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none shadow-none"
             />
           </div>
         </div>

@@ -1,5 +1,18 @@
 import prisma from "@/lib/prisma";
 
+/**
+ * Search pipeline:
+ *
+ * 1. Exact phrase matches
+ * 2. Prefix matches
+ * 3. PostgreSQL Full-Text Search
+ * 4. Trigram fuzzy matching
+ * 5. Merge & score candidates
+ * 6. Reconstruct document hierarchy
+ * 7. Filter archived ancestors
+ * 8. Return ranked results
+ */
+
 export interface SearchDocumentItem {
   id: string;
   title: string | null;
