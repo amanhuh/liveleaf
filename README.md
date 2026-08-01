@@ -67,14 +67,14 @@
 
 | Category | Technology |
 | :--- | :--- |
-| **Framework** | [Next.js 16](https://nextjs.org/) (App Router, Server Components & Actions) |
-| **Language** | [TypeScript](https://www.typescriptlang.org/) (Strict Mode) |
-| **Database** | [PostgreSQL](https://www.postgresql.org/) with `pg_trgm` & `tsvector` |
-| **ORM** | [Prisma 7.8](https://www.prisma.io/) with `@prisma/adapter-pg` |
-| **Authentication** | [Better Auth](https://www.better-auth.com/) (Session management, password hashing) |
+| **Framework** | [Next.js 16](https://nextjs.org/) |
+| **Language** | [TypeScript](https://www.typescriptlang.org/) |
+| **Database** | [PostgreSQL](https://www.postgresql.org/) |
+| **ORM** | [Prisma 7.8](https://www.prisma.io/) |
+| **Authentication** | [Better Auth](https://www.better-auth.com/) |
 | **State & Cache** | [TanStack Query v5](https://tanstack.com/query) & [Zustand](https://zustand-demo.pmnd.rs/) |
 | **Editor Core** | [Tiptap v3](https://tiptap.dev/) |
-| **Drag & Drop** | [@dnd-kit](https://dndkit.com/) (`core`, `sortable`, `utilities`) |
+| **Drag & Drop** | [@dnd-kit](https://dndkit.com/) |
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com/), [Shadcn UI](https://ui.shadcn.com/), Lucide Icons |
 
 ---
