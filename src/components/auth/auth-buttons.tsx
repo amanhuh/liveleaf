@@ -1,16 +1,12 @@
 "use client";
 
-import { useTransition, Suspense } from "react";
+import { useTransition, Suspense, useState } from "react";
 import { authClient } from "@/lib/auth/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ── GitHub social icons / google icons etc (omitted for diff accuracy) ──
-
-// ── GitHub OAuth icon ─────────────────────────────────────────────────────────
 function GitHubIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -24,7 +20,6 @@ function GitHubIcon({ className }: { className?: string }) {
   );
 }
 
-// ── Google icon ───────────────────────────────────────────────────────────────
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={cn("size-4", className)} aria-hidden="true">
@@ -48,185 +43,278 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-// ── GitHub Sign-in button (fully wired) ───────────────────────────────────────
 function GitHubSignInButtonInner() {
   const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/d";
 
   function handleGitHub() {
+    if (isPending || isLoading) return;
+    setIsLoading(true);
+
     startTransition(async () => {
-      const { error } = await authClient.signIn.social({
-        provider: "github",
-        callbackURL: next,
-      });
-      if (error) {
-        toast.error(error.message ?? "GitHub sign-in failed. Try again.");
-      } else {
-        router.refresh();
+      try {
+        const { error } = await authClient.signIn.social({
+          provider: "github",
+          callbackURL: next,
+        });
+        if (error) {
+          toast.error(error.message ?? "GitHub sign-in failed. Try again.");
+          setIsLoading(false);
+        } else {
+          router.refresh();
+        }
+      } catch {
+        toast.error("GitHub authentication error.");
+        setIsLoading(false);
       }
     });
   }
+
+  const activeLoading = isPending || isLoading;
 
   return (
     <button
       id="github-signin-btn"
       onClick={handleGitHub}
-      disabled={isPending}
-      className="auth-social-btn"
+      disabled={activeLoading}
+      className={cn(
+        "flex items-center justify-center gap-2.5 w-full h-10 px-4 rounded-full bg-foreground text-background font-medium text-xs sm:text-sm transition-all shadow-xs cursor-pointer",
+        activeLoading ? "opacity-75 cursor-not-allowed" : "hover:opacity-90"
+      )}
     >
-      {isPending ? (
-        <Loader2 className="size-4 animate-spin" />
+      {activeLoading ? (
+        <Loader2 className="size-4 animate-spin text-background" />
       ) : (
         <GitHubIcon />
       )}
-      <span>Continue with GitHub</span>
+      <span>{activeLoading ? "Redirecting to GitHub..." : "Continue with GitHub"}</span>
     </button>
   );
 }
 
 export function GitHubSignInButton() {
   return (
-    <Suspense fallback={
-      <button className="auth-social-btn" disabled>
-        <GitHubIcon />
-        <span>Continue with GitHub</span>
-      </button>
-    }>
+    <Suspense
+      fallback={
+        <button
+          className="flex items-center justify-center gap-2.5 w-full h-10 px-4 rounded-full bg-foreground text-background font-medium text-xs sm:text-sm opacity-75 cursor-not-allowed"
+          disabled
+        >
+          <Loader2 className="size-4 animate-spin text-background" />
+          <span>Continue with GitHub</span>
+        </button>
+      }
+    >
       <GitHubSignInButtonInner />
     </Suspense>
   );
 }
 
+function GoogleSignInButtonInner() {
+  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "/d";
 
-// ── Static Google button ──────────────────────────────────────────────────────
-export function GoogleSignInButton() {
+  function handleGoogle() {
+    if (isPending || isLoading) return;
+    setIsLoading(true);
+
+    startTransition(async () => {
+      try {
+        const { error } = await authClient.signIn.social({
+          provider: "google",
+          callbackURL: next,
+        });
+        if (error) {
+          toast.error(error.message ?? "Google sign-in failed. Try again.");
+          setIsLoading(false);
+        } else {
+          router.refresh();
+        }
+      } catch {
+        toast.error("Google authentication error.");
+        setIsLoading(false);
+      }
+    });
+  }
+
+  const activeLoading = isPending || isLoading;
+
   return (
     <button
       id="google-signin-btn"
-      disabled
-      title="Coming soon"
-      className="auth-social-btn auth-social-btn--disabled"
+      onClick={handleGoogle}
+      disabled={activeLoading}
+      className={cn(
+        "flex items-center justify-center gap-2.5 w-full h-10 px-4 rounded-full bg-[#f0f0f4] dark:bg-muted/60 text-foreground font-medium text-xs sm:text-sm transition-all cursor-pointer border border-border/40",
+        activeLoading ? "opacity-75 cursor-not-allowed" : "hover:bg-[#e4e4ea] dark:hover:bg-muted"
+      )}
     >
-      <GoogleIcon />
-      <span>Continue with Google</span>
-      <span className="auth-coming-soon">Soon</span>
+      {activeLoading ? (
+        <Loader2 className="size-4 animate-spin text-foreground" />
+      ) : (
+        <GoogleIcon />
+      )}
+      <span>{activeLoading ? "Redirecting to Google..." : "Continue with Google"}</span>
     </button>
   );
 }
 
-// ── Divider ───────────────────────────────────────────────────────────────────
+export function GoogleSignInButton() {
+  return (
+    <Suspense
+      fallback={
+        <button
+          className="flex items-center justify-center gap-2.5 w-full h-10 px-4 rounded-full bg-[#f0f0f4] dark:bg-muted/60 text-foreground font-medium text-xs sm:text-sm opacity-75 cursor-not-allowed border border-border/40"
+          disabled
+        >
+          <Loader2 className="size-4 animate-spin text-foreground" />
+          <span>Continue with Google</span>
+        </button>
+      }
+    >
+      <GoogleSignInButtonInner />
+    </Suspense>
+  );
+}
+
 export function AuthDivider() {
   return (
-    <div className="auth-divider">
-      <div className="auth-divider-line" />
-      <span className="auth-divider-text">or</span>
-      <div className="auth-divider-line" />
+    <div className="flex items-center gap-3 my-2.5">
+      <div className="flex-1 h-[1px] bg-border/60" />
+      <span className="text-[10px] text-muted-foreground/70 font-mono uppercase tracking-wider">
+        or
+      </span>
+      <div className="flex-1 h-[1px] bg-border/60" />
     </div>
   );
 }
 
-// ── Email sign-in form (static) ───────────────────────────────────────────────
 export function EmailSignInForm() {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <form className="auth-email-form" onSubmit={(e) => e.preventDefault()}>
-      <div className="auth-field">
-        <label htmlFor="signin-email" className="auth-label">
-          Email address
+    <form className="space-y-2.5 opacity-60 pointer-events-none" onSubmit={(e) => e.preventDefault()}>
+      <div className="space-y-0.5">
+        <label htmlFor="signin-email" className="text-[11px] font-medium text-foreground/80 pl-1">
+          Email
         </label>
         <input
           id="signin-email"
           type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          className="auth-input"
           disabled
+          autoComplete="email"
+          placeholder="name@example.com"
+          className="w-full h-9 px-3.5 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
         />
       </div>
-      <div className="auth-field">
-        <div className="auth-field-row">
-          <label htmlFor="signin-password" className="auth-label">
+
+      <div className="space-y-0.5">
+        <div className="flex items-center justify-between pl-1">
+          <label htmlFor="signin-password" className="text-[11px] font-medium text-foreground/80">
             Password
           </label>
-          <button type="button" className="auth-forgot" disabled>
-            Forgot password?
+        </div>
+        <div className="relative">
+          <input
+            id="signin-password"
+            type={showPassword ? "text" : "password"}
+            disabled
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className="w-full h-9 pl-3.5 pr-10 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
+          />
+          <button
+            type="button"
+            disabled
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 p-1"
+          >
+            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <input
-          id="signin-password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="••••••••"
-          className="auth-input"
-          disabled
-        />
       </div>
-      <Button
+
+      <button
         type="submit"
-        size="lg"
         disabled
-        className="auth-submit-btn"
-        title="Email sign-in coming soon"
+        className="w-full h-9 rounded-full bg-muted text-muted-foreground font-medium text-xs shadow-none cursor-not-allowed"
       >
-        Sign in
-      </Button>
+        Log in (Email disabled)
+      </button>
     </form>
   );
 }
 
-// ── Email sign-up form (static) ───────────────────────────────────────────────
 export function EmailSignUpForm() {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <form className="auth-email-form" onSubmit={(e) => e.preventDefault()}>
-      <div className="auth-field">
-        <label htmlFor="signup-name" className="auth-label">
-          Full name
+    <form className="space-y-2 opacity-60 pointer-events-none" onSubmit={(e) => e.preventDefault()}>
+      <div className="space-y-0.5">
+        <label htmlFor="signup-name" className="text-[11px] font-medium text-foreground/80 pl-1">
+          Your Name
         </label>
         <input
           id="signup-name"
           type="text"
-          autoComplete="name"
-          placeholder="Your name"
-          className="auth-input"
           disabled
+          autoComplete="name"
+          placeholder="Aman Gupta"
+          className="w-full h-8 px-3.5 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
         />
       </div>
-      <div className="auth-field">
-        <label htmlFor="signup-email" className="auth-label">
-          Email address
+
+      <div className="space-y-0.5">
+        <label htmlFor="signup-email" className="text-[11px] font-medium text-foreground/80 pl-1">
+          Your Email
         </label>
         <input
           id="signup-email"
           type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          className="auth-input"
           disabled
+          autoComplete="email"
+          placeholder="name@example.com"
+          className="w-full h-8 px-3.5 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
         />
       </div>
-      <div className="auth-field">
-        <label htmlFor="signup-password" className="auth-label">
+
+      <div className="space-y-0.5">
+        <label htmlFor="signup-password" className="text-[11px] font-medium text-foreground/80 pl-1">
           Password
         </label>
-        <input
-          id="signup-password"
-          type="password"
-          autoComplete="new-password"
-          placeholder="Create a strong password"
-          className="auth-input"
-          disabled
-        />
+        <div className="relative">
+          <input
+            id="signup-password"
+            type={showPassword ? "text" : "password"}
+            disabled
+            autoComplete="new-password"
+            placeholder="Create password"
+            className="w-full h-8 pl-3.5 pr-10 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
+          />
+          <button
+            type="button"
+            disabled
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 p-1"
+          >
+            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
-      <Button
+
+      <button
         type="submit"
-        size="lg"
         disabled
-        className="auth-submit-btn"
-        title="Email sign-up coming soon"
+        className="w-full h-9 rounded-full bg-muted text-muted-foreground font-medium text-xs shadow-none cursor-not-allowed"
       >
-        Create account
-      </Button>
+        Sign Up (Email disabled)
+      </button>
     </form>
   );
 }

@@ -36,6 +36,8 @@ model Document {
   plainText    String?
   icon         String?
   bannerUrl    String?
+  isFavorite   Boolean    @default(false)
+  isFullWidth  Boolean    @default(false)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   owner        User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -45,9 +47,9 @@ model Document {
   children     Document[] @relation("DocumentHierarchy")
   archivedAt   DateTime?
   position     Float      @default(0)
-  searchVector Unsupported("tsvector")?
   
   @@index([ownerId, archivedAt])
+  @@index([ownerId, isFavorite, archivedAt])
   @@index([ownerId, parentId, archivedAt, position], map: "Document_owner_parent_archived_position_idx")
   @@index([parentId])
 }

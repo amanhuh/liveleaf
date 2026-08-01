@@ -21,27 +21,47 @@ import { SlashCommand } from "@/components/editor/extensions/slash-command";
 import { cn } from "@/lib/utils";
 import type { TiptapProps } from "@/components/editor/types";
 import { isTextSelection } from "@tiptap/core";
-import type { JSONContent } from "@tiptap/core";
+import type { Editor, JSONContent } from "@tiptap/core";
 
-export default function Tiptap({ document, content }: TiptapProps) {
+export default function Tiptap({
+  document,
+  content,
+  onSaveStatusChange,
+  onStatsChange,
+  editorRef,
+}: TiptapProps) {
   const formattedToRef = useRef<number | null>(null);
 
   const updateDocument = useUpdateDocument(document.id);
-  const { mutate } = updateDocument;
+  const { mutate, isPending } = updateDocument;
 
-  const debouncedSave = useMemo(
-    () =>
-      debounce((jsonContent: JSONContent, textContent: string) => {
-        mutate({ content: jsonContent, plainText: textContent });
-      }, 500),
-    [mutate],
-  );
+  const onSaveStatusChangeRef = useRef(onSaveStatusChange);
+  useEffect(() => {
+    onSaveStatusChangeRef.current = onSaveStatusChange;
+  }, [onSaveStatusChange]);
+
+  const debouncedSaveRef = useRef<ReturnType<typeof debounce> | null>(null);
 
   useEffect(() => {
+    debouncedSaveRef.current = debounce((jsonContent: JSONContent, textContent: string) => {
+      onSaveStatusChangeRef.current?.("saving");
+      mutate(
+        { content: jsonContent, plainText: textContent },
+        {
+          onSuccess: () => {
+            onSaveStatusChangeRef.current?.("saved");
+          },
+          onError: () => {
+            onSaveStatusChangeRef.current?.("idle");
+          },
+        },
+      );
+    }, 500);
+
     return () => {
-      debouncedSave.cancel();
+      debouncedSaveRef.current?.cancel();
     };
-  }, [debouncedSave]);
+  }, [mutate]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -58,7 +78,17 @@ export default function Tiptap({ document, content }: TiptapProps) {
     ],
     content,
     onUpdate: ({ editor }) => {
-      debouncedSave(editor.getJSON(), editor.getText());
+      const text = editor.getText();
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      onStatsChange?.({ words, chars });
+      debouncedSaveRef.current?.(editor.getJSON(), text);
+    },
+    onCreate: ({ editor }) => {
+      const text = editor.getText();
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      onStatsChange?.({ words, chars });
     },
     onSelectionUpdate: ({ editor }) => {
       const { selection } = editor.state;
@@ -81,6 +111,12 @@ export default function Tiptap({ document, content }: TiptapProps) {
       },
     },
   });
+
+  useEffect(() => {
+    if (editorRef) {
+      (editorRef as React.MutableRefObject<Editor | null>).current = editor;
+    }
+  }, [editor, editorRef]);
 
   const editorState = useEditorState({
     editor,

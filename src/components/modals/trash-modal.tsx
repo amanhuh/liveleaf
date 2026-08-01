@@ -27,6 +27,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { TrashDocumentTreeItemDto } from "@/features/documents";
 import { cn } from "@/lib/utils";
 
@@ -150,15 +155,19 @@ export function TrashModal({ open, onOpenChange }: TrashModalProps) {
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       {descendants.length > 0 ? (
-                        <CollapsibleTrigger asChild>
-                          <button
-                            type="button"
-                            className="group/toggle flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-background cursor-pointer data-[state=open]:bg-background"
-                            title="Toggle archived children"
-                          >
-                            <ChevronRight className="size-3.5 transition-transform group-data-[state=open]/toggle:rotate-90" />
-                          </button>
-                        </CollapsibleTrigger>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <CollapsibleTrigger asChild>
+                              <button
+                                type="button"
+                                className="group/toggle flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-background cursor-pointer data-[state=open]:bg-background"
+                              >
+                                <ChevronRight className="size-3.5 transition-transform group-data-[state=open]/toggle:rotate-90" />
+                              </button>
+                            </CollapsibleTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">Toggle archived children</TooltipContent>
+                        </Tooltip>
                       ) : (
                         <div className="size-5 shrink-0" />
                       )}
@@ -167,24 +176,33 @@ export function TrashModal({ open, onOpenChange }: TrashModalProps) {
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => handleRestore(root.id, root.title)}
-                        disabled={restoreDocument.isPending}
-                        className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md hover:bg-background border border-transparent hover:border-border text-foreground transition-colors duration-150 cursor-pointer"
-                        title="Restore page"
-                      >
-                        <Undo2 className="size-3.5" />
-                        Restore
-                      </button>
-                      <button
-                        onClick={() => handleDelete(root.id, root.title)}
-                        disabled={deleteDocument.isPending}
-                        className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md hover:bg-destructive/10 text-destructive border border-transparent hover:border-destructive/20 transition-colors duration-150 cursor-pointer"
-                        title="Delete permanently"
-                      >
-                        <Trash2 className="size-3.5" />
-                        Delete
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleRestore(root.id, root.title)}
+                            disabled={restoreDocument.isPending}
+                            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md hover:bg-background border border-transparent hover:border-border text-foreground transition-colors duration-150 cursor-pointer"
+                          >
+                            <Undo2 className="size-3.5" />
+                            Restore
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">Restore page</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleDelete(root.id, root.title)}
+                            disabled={deleteDocument.isPending}
+                            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md hover:bg-destructive/10 text-destructive border border-transparent hover:border-destructive/20 transition-colors duration-150 cursor-pointer"
+                          >
+                            <Trash2 className="size-3.5" />
+                            Delete
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">Delete permanently</TooltipContent>
+                      </Tooltip>
                     </div>
                   </div>
 

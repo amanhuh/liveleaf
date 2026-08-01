@@ -6,6 +6,9 @@ import type { LucideIcon } from "lucide-react";
 export type TiptapProps = {
   document: DocumentDto;
   content: DocumentDto["content"];
+  onSaveStatusChange?: (status: "saving" | "saved" | "idle") => void;
+  onStatsChange?: (stats: { words: number; chars: number }) => void;
+  editorRef?: React.RefObject<Editor | null>;
 };
 
 export type CommandProps = {

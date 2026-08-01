@@ -8,22 +8,24 @@ import {
 } from "@/components/auth/auth-buttons";
 
 export const metadata: Metadata = {
-  title: "Sign in — Liveleaf",
-  description: "Sign in to your Liveleaf account.",
+  title: "Sign in — LiveLeaf",
+  description: "Sign in to your LiveLeaf personal workspace.",
 };
 
 export default function SignInPage() {
   return (
-    <div className="auth-card">
+    <div className="space-y-3 max-w-[310px] mx-auto w-full">
       {/* Header */}
-      <div className="auth-card-header">
-        <h1 className="auth-card-title">Welcome back</h1>
-        <p className="auth-card-subtitle">
-          Sign in to continue writing with Liveleaf
+      <div className="space-y-0.5 text-center md:text-left">
+        <h1 className="font-serif text-2xl font-bold tracking-tight text-foreground">
+          Welcome Back!
+        </h1>
+        <p className="text-xs text-muted-foreground font-sans">
+          Sign in to access your personal workspace
         </p>
       </div>
 
-      <div className="auth-socials">
+      <div className="space-y-2 pt-1">
         <GitHubSignInButton />
         <GoogleSignInButton />
       </div>
@@ -32,10 +34,10 @@ export default function SignInPage() {
 
       <EmailSignInForm />
 
-      <p className="auth-footer-text">
+      <p className="text-center text-xs text-muted-foreground pt-0.5">
         Don&apos;t have an account?{" "}
-        <Link href="/sign-up" className="auth-footer-link">
-          Sign up
+        <Link href="/sign-up" className="font-medium text-foreground hover:underline underline-offset-4">
+          Sign Up
         </Link>
       </p>
     </div>

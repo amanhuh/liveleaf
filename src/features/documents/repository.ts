@@ -46,7 +46,10 @@ const documentListSelect = {
   position: true,
 } satisfies Prisma.DocumentSelect;
 
-export type DocumentListItem = Prisma.DocumentGetPayload<{ select: typeof documentListSelect }>;
+export type DocumentListItem = Prisma.DocumentGetPayload<{ select: typeof documentListSelect }> & {
+  isFavorite?: boolean;
+  isFullWidth?: boolean;
+};
 
 type DbClient = typeof prisma | Prisma.TransactionClient;
 
@@ -56,7 +59,7 @@ const MIN_POSITION_GAP = 0.000001;
 export async function findActiveDocuments(ownerId: string): Promise<DocumentListItem[]> {
   return await prisma.$queryRaw<DocumentListItem[]>`
     WITH RECURSIVE active_tree AS (
-      SELECT id, title, "createdAt", "updatedAt", "parentId", "archivedAt", icon, position
+      SELECT id, title, "createdAt", "updatedAt", "parentId", "archivedAt", icon, position, "isFavorite", "isFullWidth"
       FROM "Document"
       WHERE "ownerId" = ${ownerId}
         AND "parentId" IS NULL
@@ -64,7 +67,7 @@ export async function findActiveDocuments(ownerId: string): Promise<DocumentList
 
       UNION ALL
 
-      SELECT d.id, d.title, d."createdAt", d."updatedAt", d."parentId", d."archivedAt", d.icon, d.position
+      SELECT d.id, d.title, d."createdAt", d."updatedAt", d."parentId", d."archivedAt", d.icon, d.position, d."isFavorite", d."isFullWidth"
       FROM "Document" d
       INNER JOIN active_tree a ON d."parentId" = a.id
       WHERE d."ownerId" = ${ownerId}

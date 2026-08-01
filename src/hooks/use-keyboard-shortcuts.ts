@@ -7,6 +7,7 @@ interface ShortcutHandlers {
   onMoveToTrash?: () => void;
   onRename?: () => void;
   onSearch?: () => void;
+  onOpenTrash?: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -14,6 +15,7 @@ export function useKeyboardShortcuts({
   onMoveToTrash,
   onRename,
   onSearch,
+  onOpenTrash,
 }: ShortcutHandlers) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,6 +44,14 @@ export function useKeyboardShortcuts({
         return;
       }
 
+      if (e.key.toLowerCase() === "t" && e.shiftKey) {
+        if (onOpenTrash) {
+          e.preventDefault();
+          onOpenTrash();
+          return;
+        }
+      }
+
       if (e.key === "Backspace" && e.shiftKey) {
         if (onMoveToTrash) {
           e.preventDefault();
@@ -61,5 +71,5 @@ export function useKeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onNewPage, onMoveToTrash, onRename, onSearch]);
+  }, [onNewPage, onMoveToTrash, onRename, onSearch, onOpenTrash]);
 }

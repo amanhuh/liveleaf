@@ -108,6 +108,8 @@ export function useCreateDocument() {
                 archivedAt: null,
                 position: nextPosition,
                 icon: null,
+                isFavorite: false,
+                isFullWidth: false,
             };
             queryClient.setQueryData<DocumentListItemDto[]>(
                 ["documents"],
@@ -160,6 +162,8 @@ export function useUpdateDocument(docId: string) {
           ...doc,
           title: payload.title !== undefined ? (payload.title.trim() || "") : doc.title,
           icon: payload.icon !== undefined ? payload.icon : doc.icon,
+          isFavorite: payload.isFavorite !== undefined ? payload.isFavorite : doc.isFavorite,
+          isFullWidth: payload.isFullWidth !== undefined ? payload.isFullWidth : doc.isFullWidth,
           updatedAt: new Date().toISOString(),
         } : doc) ?? []
       );
@@ -172,6 +176,8 @@ export function useUpdateDocument(docId: string) {
           plainText: payload.plainText !== undefined ? (payload.plainText ?? null) : previousDocument.plainText,
           icon: payload.icon !== undefined ? payload.icon : previousDocument.icon,
           bannerUrl: payload.bannerUrl !== undefined ? payload.bannerUrl : previousDocument.bannerUrl,
+          isFavorite: payload.isFavorite !== undefined ? payload.isFavorite : previousDocument.isFavorite,
+          isFullWidth: payload.isFullWidth !== undefined ? payload.isFullWidth : previousDocument.isFullWidth,
           updatedAt: new Date().toISOString(),
         });
       }

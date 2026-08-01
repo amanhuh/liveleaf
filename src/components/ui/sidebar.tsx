@@ -22,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { PanelLeftIcon } from "lucide-react"
 import { useDocumentStore } from "@/stores/document-store"
 
@@ -226,7 +227,7 @@ function Sidebar({
         className={cn(
           "relative w-(--sidebar-width) bg-transparent",
           !isResizing && "transition-[width] duration-200 ease-linear",
-          "group-data-[collapsible=offcanvas]:w-0",
+          "group-data-[state=collapsed]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
             ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
@@ -352,12 +353,10 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
         <div className="flex items-center gap-1.5 whitespace-nowrap">
           <span className="font-semibold">Close</span>
           <span className="opacity-70">Click or</span>
-          <kbd className="inline-flex h-5 select-none items-center gap-0.5 rounded border border-background/20 bg-background/10 px-1.5 font-mono text-[10px] font-medium">
-            {isMac ? "⌘" : "Ctrl"}
-          </kbd>
-          <kbd className="inline-flex h-5 select-none items-center gap-0.5 rounded border border-background/20 bg-background/10 px-1.5 font-mono text-[10px] font-medium">
-            \
-          </kbd>
+          <KbdGroup>
+            <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+            <Kbd>\</Kbd>
+          </KbdGroup>
         </div>
         <div className="flex items-center gap-1.5 whitespace-nowrap">
           <span className="font-semibold">Resize</span>
@@ -373,7 +372,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        "relative flex w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        "relative flex flex-1 min-w-0 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className
       )}
       {...props}

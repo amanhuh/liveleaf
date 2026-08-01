@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sidebar";
 import { PlusIcon, LogOut, ChevronDown, Trash2, Settings, Search } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import TreeItem from "./tree-item";
 import { useGetDocuments, useCreateDocument, useMoveDocument } from "@/hooks/use-document";
 import { SidebarSkeleton } from "@/components/skeleton/sidebar-skeleton";
@@ -47,6 +48,7 @@ import { TrashModal } from "@/components/modals/trash-modal";
 import { SearchCommand } from "@/components/modals/search-command";
 import { SettingsModal } from "@/components/modals/settings-modal";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,9 +70,9 @@ import {
 } from "./sidebar-tree-utils";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const params = useParams<{ documentId: string }>();
-  const selectedDocumentId = params.documentId;
   const router = useRouter();
+  const params = useParams<{ documentId?: string }>();
+  const selectedDocumentId = params.documentId ?? "";
   const { data: documents = [], isLoading: isDocsLoading } = useGetDocuments();
   const rootDocs = documents.filter((doc) => doc.parentId === null);
   const createDocument = useCreateDocument();
@@ -80,6 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMac, setIsMac] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [projectedMove, setProjectedMove] = useState<ProjectedSidebarMove | null>(null);
   const suppressNavigationRef = React.useRef(false);
@@ -274,6 +277,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setProjectedMove(null);
   };
 
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(true);
+  const favoriteDocuments = documents.filter((doc) => doc.isFavorite);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader className="py-2.5 px-2.5">
@@ -327,6 +333,45 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel
+            onClick={() => setIsFavoritesOpen(!isFavoritesOpen)}
+            className="cursor-pointer select-none group/fav-label flex items-center justify-between hover:text-foreground transition-colors"
+          >
+            <div className="flex items-center gap-1">
+              <ChevronDown
+                className={`size-3.5 text-muted-foreground transition-transform duration-200 ${
+                  isFavoritesOpen ? "" : "-rotate-90"
+                }`}
+              />
+              <span>Favorites</span>
+            </div>
+          </SidebarGroupLabel>
+          {isFavoritesOpen && (
+            <SidebarGroupContent className="px-1 py-0.5">
+              {favoriteDocuments.length === 0 ? (
+                <div className="px-2 py-1 text-xs text-muted-foreground/50 italic">
+                  No favorited pages
+                </div>
+              ) : (
+                <SidebarMenu className="gap-0">
+                  {favoriteDocuments.map((doc) => (
+                    <TreeItem
+                      key={`fav-${doc.id}`}
+                      item={doc}
+                      docs={documents}
+                      selectedDocumentId={selectedDocumentId}
+                      renamingDocumentId={renamingDocumentId}
+                      setRenamingDocumentId={setRenamingDocumentId}
+                      isFavoriteSection
+                    />
+                  ))}
+                </SidebarMenu>
+              )}
+            </SidebarGroupContent>
+          )}
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarGroupLabel>
             <span>Pages</span>
@@ -415,8 +460,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span>Search</span>
                 </SidebarMenuButton>
               </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Search (⌘K)</p>
+              <TooltipContent side="right" className="flex items-center gap-2">
+                <span>Search</span>
+                <KbdGroup>
+                  <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                  <Kbd>K</Kbd>
+                </KbdGroup>
               </TooltipContent>
             </Tooltip>
           </SidebarMenuItem>
@@ -428,8 +477,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span>Trash</span>
                 </SidebarMenuButton>
               </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Trash (⇧⌘⌫)</p>
+              <TooltipContent side="right" className="flex items-center gap-2">
+                <span>Trash</span>
+                <KbdGroup>
+                  <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                  <Kbd>{isMac ? "⇧" : "Shift"}</Kbd>
+                  <Kbd>T</Kbd>
+                </KbdGroup>
               </TooltipContent>
             </Tooltip>
           </SidebarMenuItem>

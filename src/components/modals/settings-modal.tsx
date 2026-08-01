@@ -8,17 +8,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth/auth-client";
-import { User, LogOut, Moon, Sun, Monitor } from "lucide-react";
+import { User, LogOut, Moon, Sun, Monitor, Keyboard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { useEffect } from "react";
 
 interface SettingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-type TabType = "account" | "appearance";
+type TabType = "account" | "appearance" | "shortcuts";
 
 const THEME_OPTIONS = [
   { value: "light", label: "Light", icon: Sun },
@@ -29,6 +31,7 @@ const THEME_OPTIONS = [
 const TABS: { value: TabType; label: string; icon: typeof User }[] = [
   { value: "account", label: "Account", icon: User },
   { value: "appearance", label: "Appearance", icon: Monitor },
+  { value: "shortcuts", label: "Shortcuts", icon: Keyboard },
 ];
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
@@ -36,6 +39,11 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const { data: session } = authClient.useSession();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>("account");
+  const [isMac, setIsMac] = useState(false);
+
+  useEffect(() => {
+    setIsMac(typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0);
+  }, []);
 
   const handleSignOut = async () => {
     onOpenChange(false);
@@ -159,6 +167,52 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {activeTab === "shortcuts" && (
+                <div className="rounded-lg border border-border/60 divide-y divide-border/40 text-xs">
+                    <div className="flex items-center justify-between py-2.5 px-3">
+                      <span className="text-foreground/90 font-medium">Search Pages</span>
+                      <KbdGroup>
+                        <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                        <Kbd>K</Kbd>
+                      </KbdGroup>
+                    </div>
+                    <div className="flex items-center justify-between py-2.5 px-3">
+                      <span className="text-foreground/90 font-medium">Create New Page</span>
+                      <KbdGroup>
+                        <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                        <Kbd>N</Kbd>
+                      </KbdGroup>
+                    </div>
+                    <div className="flex items-center justify-between py-2.5 px-3">
+                      <span className="text-foreground/90 font-medium">Open Trash Modal</span>
+                      <KbdGroup>
+                        <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                        <Kbd>{isMac ? "⇧" : "Shift"}</Kbd>
+                        <Kbd>T</Kbd>
+                      </KbdGroup>
+                    </div>
+                    <div className="flex items-center justify-between py-2.5 px-3">
+                      <span className="text-foreground/90 font-medium">Move Active Page to Trash</span>
+                      <KbdGroup>
+                        <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                        <Kbd>{isMac ? "⇧" : "Shift"}</Kbd>
+                        <Kbd>{isMac ? "⌫" : "Del"}</Kbd>
+                      </KbdGroup>
+                    </div>
+                    <div className="flex items-center justify-between py-2.5 px-3">
+                      <span className="text-foreground/90 font-medium">Toggle Sidebar</span>
+                      <KbdGroup>
+                        <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                        <Kbd>\</Kbd>
+                      </KbdGroup>
+                    </div>
+                    <div className="flex items-center justify-between py-2.5 px-3">
+                      <span className="text-foreground/90 font-medium">Double-click Page Title</span>
+                      <span className="text-muted-foreground italic text-[11px]">Rename page</span>
+                    </div>
+                  </div>
               )}
             </div>
           </div>

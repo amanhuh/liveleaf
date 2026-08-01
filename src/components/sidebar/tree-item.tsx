@@ -14,13 +14,16 @@ import { DropdownMenuEllipsis } from "./dropdown-menu-ellipsis";
 import { ContextMenuEllipsis } from "./context-menu-ellipsis";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { FileIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
+import { FileIcon, ChevronRightIcon, PlusIcon, Star } from "lucide-react";
 import { useDocumentStore } from "@/stores/document-store";
 import { useCreateDocument, useUpdateDocument } from "@/hooks/use-document";
 import {
   SIDEBAR_INDENTATION_WIDTH,
   type DropIndicatorState,
 } from "./sidebar-tree-utils";
+import { toast } from "sonner";
+
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 export type TreeItemProps = {
   item: DocumentListItemDto;
@@ -36,6 +39,7 @@ export type TreeItemProps = {
   itemStyle?: React.CSSProperties;
   dragAttributes?: React.HTMLAttributes<HTMLElement>;
   dragListeners?: React.HTMLAttributes<HTMLElement>;
+  isFavoriteSection?: boolean;
 };
 
 export default function TreeItem({
@@ -52,6 +56,7 @@ export default function TreeItem({
   itemStyle,
   dragAttributes,
   dragListeners,
+  isFavoriteSection = false,
 }: TreeItemProps) {
   const router = useRouter();
   const expandedDocumentIds = useDocumentStore((state) => state.expandedDocumentIds);
@@ -79,44 +84,45 @@ export default function TreeItem({
           inputRef.current.focus();
           inputRef.current.select();
         }
-      }, 0);
+      }, 50);
 
       return () => clearTimeout(timeoutId);
     }
   }, [isRenaming, item.title]);
 
   const handleSave = () => {
-    updateDocument.mutate({ title: draftTitle.trim() || "New Page" });
+    const trimmedTitle = draftTitle.trim();
+    if (trimmedTitle !== item.title) {
+      updateDocument.mutate({ title: trimmedTitle });
+    }
     setRenamingDocumentId(null);
   };
 
   const handleCancel = () => {
-    setDraftTitle(documentName);
+    setDraftTitle(item.title);
     setRenamingDocumentId(null);
   };
 
-  const handleNavigate = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleNavigate = () => {
     if (suppressNavigationRef?.current) {
       suppressNavigationRef.current = false;
-      event.preventDefault();
       return;
     }
-
-    if (event.metaKey || event.ctrlKey) {
-      window.open(`/d/${item.id}`, "_blank", "noopener,noreferrer");
-      return;
-    }
-
     router.push(`/d/${item.id}`);
   };
 
   const buttonContent = isRenaming ? (
-    <div className="flex items-center w-full min-w-0 px-2 py-0.5 rounded-md bg-sidebar-accent/60 ring-1 ring-border/80">
-      <FileIcon className="size-4 mr-2 shrink-0 text-muted-foreground" />
+    <div
+      className="flex items-center w-full min-w-0"
+      style={{ paddingLeft: 6 + depth * SIDEBAR_INDENTATION_WIDTH }}
+    >
+      <div className="size-4 mr-2 shrink-0 flex items-center justify-center">
+        <FileIcon className="size-4" />
+      </div>
       <input
-        autoFocus
         ref={inputRef}
-        className="bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 p-0 m-0 w-full min-w-0 text-sm font-medium text-foreground"
+        type="text"
+        className="flex-1 bg-transparent border-none outline-none font-medium text-sidebar-foreground text-sm leading-normal p-0 focus:outline-none focus:ring-0 focus:border-none select-text cursor-text"
         value={draftTitle}
         onChange={(e) => setDraftTitle(e.target.value)}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -132,7 +138,7 @@ export default function TreeItem({
       role="link"
       tabIndex={0}
       className="flex items-center w-full min-w-0 cursor-pointer"
-      style={{ paddingLeft: 6 + depth * SIDEBAR_INDENTATION_WIDTH }}
+      style={{ paddingLeft: 6 + (isFavoriteSection ? 0 : depth) * SIDEBAR_INDENTATION_WIDTH }}
       onClick={handleNavigate}
       onKeyDown={(event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -145,7 +151,7 @@ export default function TreeItem({
       }}
     >
       <div className="relative size-4 mr-2 shrink-0 flex items-center justify-center">
-        {hasChildren && (
+        {!isFavoriteSection && hasChildren && (
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -157,7 +163,7 @@ export default function TreeItem({
             <ChevronRightIcon className={cn("size-3.5 text-foreground", isOpen && "rotate-90")} />
           </button>
         )}
-        <FileIcon className={cn("size-4", hasChildren && "group-hover/item:opacity-0")} />
+        <FileIcon className={cn("size-4", !isFavoriteSection && hasChildren && "group-hover/item:opacity-0")} />
       </div>
       <span
         onDoubleClick={(e) => {
@@ -175,6 +181,8 @@ export default function TreeItem({
         setRenamingDocumentId={setRenamingDocumentId}
         createDocument={createDocument}
         expandDocument={expandDocument}
+        updateDocument={updateDocument}
+        isFavoriteSection={isFavoriteSection}
       />
     </div>
   );
@@ -246,20 +254,55 @@ function ActionButtons({
   setRenamingDocumentId,
   createDocument,
   expandDocument,
+  updateDocument,
+  isFavoriteSection,
 }: {
   item: DocumentListItemDto;
   setRenamingDocumentId: (id: string | null) => void;
   createDocument: ReturnType<typeof useCreateDocument>;
   expandDocument: (id: string) => void;
+  updateDocument: ReturnType<typeof useUpdateDocument>;
+  isFavoriteSection?: boolean;
 }) {
+  const [isMac, setIsMac] = useState(false);
+
+  useEffect(() => {
+    setIsMac(typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0);
+  }, []);
+
+  if (isFavoriteSection) {
+    return (
+      <div className="relative flex ml-auto gap-1 shrink-0 invisible group-hover/item:visible">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                updateDocument.mutate(
+                  { isFavorite: false },
+                  {
+                    onSuccess: () => {
+                      toast.success("Removed from favorites");
+                    },
+                  },
+                );
+              }}
+              className="size-[20px] border border-transparent hover:border-border/40 hover:bg-sidebar-foreground/10 rounded-sm cursor-pointer flex items-center justify-center text-amber-400"
+            >
+              <Star className="size-3.5 fill-amber-400" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" align="center">
+            Remove from favorites
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex ml-auto gap-1 shrink-0 invisible group-hover/item:visible">
-      <div className="size-[20px] border border-transparent hover:border-border/40 hover:bg-sidebar-foreground/10 rounded-sm cursor-pointer flex items-center justify-center text-foreground">
-        <DropdownMenuEllipsis
-          document={item}
-          onRename={() => setRenamingDocumentId(item.id)}
-        />
-      </div>
       <Tooltip>
         <TooltipTrigger asChild>
           <button
@@ -274,10 +317,21 @@ function ActionButtons({
             <PlusIcon className="size-3.5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="right" align="center">
-          Add page inside
+        <TooltipContent side="right" align="center" className="flex items-center gap-2">
+          <span>Add page inside</span>
+          <KbdGroup>
+            <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+            <Kbd>N</Kbd>
+          </KbdGroup>
         </TooltipContent>
       </Tooltip>
+
+      <div className="size-[20px] border border-transparent hover:border-border/40 hover:bg-sidebar-foreground/10 rounded-sm cursor-pointer flex items-center justify-center text-foreground">
+        <DropdownMenuEllipsis
+          document={item}
+          onRename={() => setRenamingDocumentId(item.id)}
+        />
+      </div>
     </div>
   );
 }

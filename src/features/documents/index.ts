@@ -18,6 +18,8 @@ export type DocumentDto = Omit<
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  isFavorite?: boolean;
+  isFullWidth?: boolean;
 };
 
 export type DocumentListItemDto = Omit<
@@ -27,6 +29,8 @@ export type DocumentListItemDto = Omit<
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  isFavorite?: boolean;
+  isFullWidth?: boolean;
 };
 
 export type TrashDocumentTreeItemDto = Omit<
@@ -37,4 +41,3 @@ export type TrashDocumentTreeItemDto = Omit<
   updatedAt: string;
   archivedAt: string | null;
 };
-
