@@ -33,10 +33,6 @@ export function LandingHero() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-3xl mx-auto text-center flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/70 bg-muted/30 text-xs font-mono text-muted-foreground mb-6">
-            <span>Version 1.0 — simple, focused, fast</span>
-          </div>
-
           <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl tracking-tight text-foreground leading-[1.1] mb-6 font-normal">
             A calmer place <br className="hidden sm:inline" />
             for your <span className="italic font-normal">thoughts.</span>
@@ -79,7 +75,7 @@ export function LandingHero() {
           </div>
         </div>
 
-        <div className="relative max-w-5xl mx-auto mt-4">
+        <div className="relative max-w-5xl mx-auto mt-12">
           <div className="hidden lg:flex absolute -top-6 -left-8 z-20 items-center gap-3 p-3 px-4 rounded-xl border border-border/60 bg-background/90 backdrop-blur-md shadow-md animate-float-slow">
             <div className="p-2 rounded-lg bg-muted text-foreground">
               <Zap className="w-4 h-4" />
@@ -137,26 +133,7 @@ export function LandingHero() {
           </div>
 
           <div className="rounded-2xl border border-border/80 bg-card shadow-2xl overflow-hidden transition-all duration-300">
-            <div className="px-4 py-2 bg-muted/30 border-b border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-400/80" />
-                </div>
-                <div className="h-3.5 w-[1px] bg-border/80 mx-2" />
-                <span className="font-mono text-[11px] text-muted-foreground">
-                  liveleaf.app/d/project-vision
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-background border border-border/60 text-[10px] font-mono">
-                  ⌘K Search
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 min-h-[480px] bg-background">
+            <div className="grid grid-cols-1 md:grid-cols-12 min-h-[560px] bg-background">
               <div className="hidden md:flex md:col-span-3 border-r border-border/60 p-2.5 bg-sidebar text-sidebar-foreground flex-col justify-between">
                 <div className="space-y-4">
                   <div className="p-1.5 rounded-md hover:bg-sidebar-accent flex items-center gap-2.5 cursor-pointer border border-border/30">
