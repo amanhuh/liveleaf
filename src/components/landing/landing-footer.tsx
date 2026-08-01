@@ -5,7 +5,7 @@ export function LandingFooter() {
   return (
     <footer className="border-t border-border/40 bg-background text-muted-foreground transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-14 gap-8 lg:gap-12">
           <div className="md:col-span-5 space-y-4">
             <Link
               href="/"
@@ -42,7 +42,7 @@ export function LandingFooter() {
             </ul>
           </div>
 
-          <div className="md:col-span-4 space-y-3">
+          <div className="md:col-span-3 space-y-3">
             <h4 className="font-mono text-xs uppercase tracking-wider text-foreground font-medium">
               Legal & Privacy
             </h4>
@@ -59,7 +59,27 @@ export function LandingFooter() {
               </li>
             </ul>
           </div>
+
+          <div className="md:col-span-3 space-y-3">
+            <h4 className="font-mono text-xs uppercase tracking-wider text-foreground font-medium">
+              Links
+            </h4>
+            <ul className="space-y-2 text-xs font-sans">
+              <li>
+                <Link href="https://github.com/amanhuh/liveleaf" className="hover:text-foreground transition-colors">
+                  Github
+                </Link>
+              </li>
+              <li>
+                <Link href="https://x.com/oraggato" className="hover:text-foreground transition-colors">
+                  X (Twitter)
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
+
+
 
         <div className="mt-12 pt-8 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-sans text-muted-foreground">
           <p>© {new Date().getFullYear()} LiveLeaf. All rights reserved.</p>

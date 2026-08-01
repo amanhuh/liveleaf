@@ -117,12 +117,12 @@ export default function TermsPage() {
               8. Contact Us
             </h2>
             <p className="text-muted-foreground">
-              If you have any questions regarding these Terms of Service, please contact us at{" "}
+              If you have any questions or concerns regarding our Privacy Policy or data handling practices, please contact me on {" "}
               <a
-                href="mailto:support@liveleaf.app"
+                href="https://x.com/oraggato"
                 className="text-emerald-600 dark:text-emerald-400 font-medium underline underline-offset-4"
               >
-                support@liveleaf.app
+                x.com
               </a>.
             </p>
           </section>
