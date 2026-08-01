@@ -13,10 +13,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-screen w-screen overflow-hidden bg-white dark:bg-[#181a1f] p-3 sm:p-5 md:p-6 flex flex-col md:flex-row gap-4 sm:gap-6 select-none">
-      <div className="hidden md:flex md:w-1/2 h-full rounded-[28px] bg-[#07150c] p-8 lg:p-12 flex-col justify-between text-white relative overflow-hidden shrink-0 shadow-lg">
+    <div className="h-screen w-screen overflow-hidden bg-[#f4f5f8] dark:bg-[#090a0c] text-foreground dark:text-zinc-100 p-3 sm:p-5 md:p-6 flex flex-col md:flex-row gap-4 sm:gap-6 select-none font-sans transition-colors duration-200">
+      {/* Left Signature Emerald Artwork Panel */}
+      <div className="hidden md:flex md:w-1/2 h-full rounded-[28px] bg-[#06140b] p-8 lg:p-12 flex-col justify-between text-white relative overflow-hidden shrink-0 border border-emerald-950/60 shadow-2xl">
         <div
-          className="absolute inset-0 bg-gradient-to-br from-emerald-950/90 via-[#07150c] to-[#020804] z-0"
+          className="absolute inset-0 bg-gradient-to-br from-emerald-950/90 via-[#06140b] to-[#020804] z-0"
           aria-hidden="true"
         />
         <div
@@ -58,7 +59,8 @@ export default function AuthLayout({
         </div>
       </div>
 
-      <div className="flex-1 md:w-1/2 h-full p-6 sm:p-10 lg:p-14 flex flex-col justify-center bg-transparent text-card-foreground overflow-hidden">
+      {/* Right Theme-Responsive Form Container */}
+      <div className="flex-1 md:w-1/2 h-full p-6 sm:p-10 lg:p-14 flex flex-col justify-center bg-transparent overflow-hidden">
         <div className="md:hidden flex items-center justify-between mb-6">
           <Link
             href="/"
@@ -77,7 +79,7 @@ export default function AuthLayout({
           </Link>
         </div>
 
-        <div className="w-full my-auto">{children}</div>
+        <div className="w-full my-auto max-w-sm mx-auto">{children}</div>
       </div>
     </div>
   );

@@ -43,154 +43,132 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-function GitHubSignInButtonInner() {
+function SocialAuthGroupInner() {
+  const [activeProvider, setActiveProvider] = useState<"github" | "google" | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/d";
 
-  function handleGitHub() {
-    if (isPending || isLoading) return;
-    setIsLoading(true);
+  function handleOAuth(provider: "github" | "google") {
+    if (activeProvider || isPending) return;
+    setActiveProvider(provider);
 
     startTransition(async () => {
       try {
         const { error } = await authClient.signIn.social({
-          provider: "github",
+          provider,
           callbackURL: next,
         });
         if (error) {
-          toast.error(error.message ?? "GitHub sign-in failed. Try again.");
-          setIsLoading(false);
+          toast.error(
+            error.message ?? `${provider === "github" ? "GitHub" : "Google"} sign-in failed. Try again.`
+          );
+          setActiveProvider(null);
         } else {
           router.refresh();
         }
       } catch {
-        toast.error("GitHub authentication error.");
-        setIsLoading(false);
+        toast.error("Authentication error.");
+        setActiveProvider(null);
       }
     });
   }
 
-  const activeLoading = isPending || isLoading;
+  const isLocked = activeProvider !== null || isPending;
 
   return (
-    <button
-      id="github-signin-btn"
-      onClick={handleGitHub}
-      disabled={activeLoading}
-      className={cn(
-        "flex items-center justify-center gap-2.5 w-full h-10 px-4 rounded-full bg-foreground text-background font-medium text-xs sm:text-sm transition-all shadow-xs cursor-pointer",
-        activeLoading ? "opacity-75 cursor-not-allowed" : "hover:opacity-90"
-      )}
+    <div className="space-y-3 pt-1">
+      {/* GitHub Sign-In Button */}
+      <button
+        id="github-signin-btn"
+        onClick={() => handleOAuth("github")}
+        disabled={isLocked}
+        className={cn(
+          "flex items-center justify-center gap-2.5 w-full h-11 px-4 rounded-full bg-foreground text-background font-medium text-xs sm:text-sm transition-all shadow-md",
+          activeProvider === "github"
+            ? "opacity-90 cursor-wait"
+            : isLocked
+            ? "opacity-40 cursor-not-allowed"
+            : "hover:opacity-90 cursor-pointer"
+        )}
+      >
+        {activeProvider === "github" ? (
+          <Loader2 className="size-4 animate-spin text-background" />
+        ) : (
+          <GitHubIcon />
+        )}
+        <span>{activeProvider === "github" ? "Redirecting to GitHub..." : "Continue with GitHub"}</span>
+      </button>
+
+      {/* Google Sign-In Button */}
+      <button
+        id="google-signin-btn"
+        onClick={() => handleOAuth("google")}
+        disabled={isLocked}
+        className={cn(
+          "flex items-center justify-center gap-2.5 w-full h-11 px-4 rounded-full bg-card dark:bg-zinc-900 text-foreground dark:text-zinc-200 font-medium text-xs sm:text-sm transition-all border border-border/80 dark:border-zinc-700/80 shadow-2xs",
+          activeProvider === "google"
+            ? "opacity-90 cursor-wait"
+            : isLocked
+            ? "opacity-40 cursor-not-allowed"
+            : "hover:bg-muted dark:hover:bg-zinc-800 dark:hover:text-white cursor-pointer"
+        )}
+      >
+        {activeProvider === "google" ? (
+          <Loader2 className="size-4 animate-spin text-foreground" />
+        ) : (
+          <GoogleIcon />
+        )}
+        <span>{activeProvider === "google" ? "Redirecting to Google..." : "Continue with Google"}</span>
+      </button>
+    </div>
+  );
+}
+
+export function SocialAuthGroup() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-3 pt-1">
+          <button
+            className="flex items-center justify-center gap-2.5 w-full h-11 px-4 rounded-full bg-foreground text-background font-medium text-xs sm:text-sm opacity-75 cursor-not-allowed"
+            disabled
+          >
+            <Loader2 className="size-4 animate-spin text-background" />
+            <span>Continue with GitHub</span>
+          </button>
+          <button
+            className="flex items-center justify-center gap-2.5 w-full h-11 px-4 rounded-full bg-card dark:bg-zinc-900 text-foreground dark:text-zinc-200 font-medium text-xs sm:text-sm opacity-75 cursor-not-allowed border border-border/80 dark:border-zinc-700/80"
+            disabled
+          >
+            <Loader2 className="size-4 animate-spin text-foreground" />
+            <span>Continue with Google</span>
+          </button>
+        </div>
+      }
     >
-      {activeLoading ? (
-        <Loader2 className="size-4 animate-spin text-background" />
-      ) : (
-        <GitHubIcon />
-      )}
-      <span>{activeLoading ? "Redirecting to GitHub..." : "Continue with GitHub"}</span>
-    </button>
+      <SocialAuthGroupInner />
+    </Suspense>
   );
 }
 
 export function GitHubSignInButton() {
-  return (
-    <Suspense
-      fallback={
-        <button
-          className="flex items-center justify-center gap-2.5 w-full h-10 px-4 rounded-full bg-foreground text-background font-medium text-xs sm:text-sm opacity-75 cursor-not-allowed"
-          disabled
-        >
-          <Loader2 className="size-4 animate-spin text-background" />
-          <span>Continue with GitHub</span>
-        </button>
-      }
-    >
-      <GitHubSignInButtonInner />
-    </Suspense>
-  );
-}
-
-function GoogleSignInButtonInner() {
-  const [isPending, startTransition] = useTransition();
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/d";
-
-  function handleGoogle() {
-    if (isPending || isLoading) return;
-    setIsLoading(true);
-
-    startTransition(async () => {
-      try {
-        const { error } = await authClient.signIn.social({
-          provider: "google",
-          callbackURL: next,
-        });
-        if (error) {
-          toast.error(error.message ?? "Google sign-in failed. Try again.");
-          setIsLoading(false);
-        } else {
-          router.refresh();
-        }
-      } catch {
-        toast.error("Google authentication error.");
-        setIsLoading(false);
-      }
-    });
-  }
-
-  const activeLoading = isPending || isLoading;
-
-  return (
-    <button
-      id="google-signin-btn"
-      onClick={handleGoogle}
-      disabled={activeLoading}
-      className={cn(
-        "flex items-center justify-center gap-2.5 w-full h-10 px-4 rounded-full bg-[#f0f0f4] dark:bg-muted/60 text-foreground font-medium text-xs sm:text-sm transition-all cursor-pointer border border-border/40",
-        activeLoading ? "opacity-75 cursor-not-allowed" : "hover:bg-[#e4e4ea] dark:hover:bg-muted"
-      )}
-    >
-      {activeLoading ? (
-        <Loader2 className="size-4 animate-spin text-foreground" />
-      ) : (
-        <GoogleIcon />
-      )}
-      <span>{activeLoading ? "Redirecting to Google..." : "Continue with Google"}</span>
-    </button>
-  );
+  return <SocialAuthGroup />;
 }
 
 export function GoogleSignInButton() {
-  return (
-    <Suspense
-      fallback={
-        <button
-          className="flex items-center justify-center gap-2.5 w-full h-10 px-4 rounded-full bg-[#f0f0f4] dark:bg-muted/60 text-foreground font-medium text-xs sm:text-sm opacity-75 cursor-not-allowed border border-border/40"
-          disabled
-        >
-          <Loader2 className="size-4 animate-spin text-foreground" />
-          <span>Continue with Google</span>
-        </button>
-      }
-    >
-      <GoogleSignInButtonInner />
-    </Suspense>
-  );
+  return null;
 }
 
 export function AuthDivider() {
   return (
-    <div className="flex items-center gap-3 my-2.5">
-      <div className="flex-1 h-[1px] bg-border/60" />
-      <span className="text-[10px] text-muted-foreground/70 font-mono uppercase tracking-wider">
+    <div className="flex items-center gap-3 my-3">
+      <div className="flex-1 h-[1px] bg-border/70 dark:bg-zinc-800" />
+      <span className="text-[10px] text-muted-foreground/70 dark:text-zinc-500 font-mono uppercase tracking-wider">
         or
       </span>
-      <div className="flex-1 h-[1px] bg-border/60" />
+      <div className="flex-1 h-[1px] bg-border/70 dark:bg-zinc-800" />
     </div>
   );
 }
@@ -199,9 +177,9 @@ export function EmailSignInForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <form className="space-y-2.5 opacity-60 pointer-events-none" onSubmit={(e) => e.preventDefault()}>
-      <div className="space-y-0.5">
-        <label htmlFor="signin-email" className="text-[11px] font-medium text-foreground/80 pl-1">
+    <form className="space-y-3 opacity-60 pointer-events-none" onSubmit={(e) => e.preventDefault()}>
+      <div className="space-y-1">
+        <label htmlFor="signin-email" className="text-xs font-medium text-foreground dark:text-zinc-300 pl-1">
           Email
         </label>
         <input
@@ -210,13 +188,13 @@ export function EmailSignInForm() {
           disabled
           autoComplete="email"
           placeholder="name@example.com"
-          className="w-full h-9 px-3.5 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
+          className="w-full h-10 px-3.5 rounded-xl bg-muted/50 dark:bg-zinc-900/80 border border-border/70 dark:border-zinc-700/80 text-foreground dark:text-zinc-100 text-xs placeholder:text-muted-foreground/50 dark:placeholder:text-zinc-500 cursor-not-allowed"
         />
       </div>
 
-      <div className="space-y-0.5">
+      <div className="space-y-1">
         <div className="flex items-center justify-between pl-1">
-          <label htmlFor="signin-password" className="text-[11px] font-medium text-foreground/80">
+          <label htmlFor="signin-password" className="text-xs font-medium text-foreground dark:text-zinc-300">
             Password
           </label>
         </div>
@@ -227,13 +205,13 @@ export function EmailSignInForm() {
             disabled
             autoComplete="current-password"
             placeholder="••••••••"
-            className="w-full h-9 pl-3.5 pr-10 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
+            className="w-full h-10 pl-3.5 pr-10 rounded-xl bg-muted/50 dark:bg-zinc-900/80 border border-border/70 dark:border-zinc-700/80 text-foreground dark:text-zinc-100 text-xs placeholder:text-muted-foreground/50 dark:placeholder:text-zinc-500 cursor-not-allowed"
           />
           <button
             type="button"
             disabled
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 p-1"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 dark:text-zinc-500 p-1"
           >
             {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
@@ -243,7 +221,7 @@ export function EmailSignInForm() {
       <button
         type="submit"
         disabled
-        className="w-full h-9 rounded-full bg-muted text-muted-foreground font-medium text-xs shadow-none cursor-not-allowed"
+        className="w-full h-10 rounded-full bg-muted/40 dark:bg-zinc-900/40 text-muted-foreground/60 dark:text-zinc-500 font-medium text-xs border border-border/40 dark:border-zinc-800/40 cursor-not-allowed select-none shadow-none"
       >
         Log in (Email disabled)
       </button>
@@ -255,9 +233,9 @@ export function EmailSignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <form className="space-y-2 opacity-60 pointer-events-none" onSubmit={(e) => e.preventDefault()}>
-      <div className="space-y-0.5">
-        <label htmlFor="signup-name" className="text-[11px] font-medium text-foreground/80 pl-1">
+    <form className="space-y-2.5 opacity-60 pointer-events-none" onSubmit={(e) => e.preventDefault()}>
+      <div className="space-y-1">
+        <label htmlFor="signup-name" className="text-xs font-medium text-foreground dark:text-zinc-300 pl-1">
           Your Name
         </label>
         <input
@@ -266,12 +244,12 @@ export function EmailSignUpForm() {
           disabled
           autoComplete="name"
           placeholder="Aman Gupta"
-          className="w-full h-8 px-3.5 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
+          className="w-full h-9 px-3.5 rounded-xl bg-muted/50 dark:bg-zinc-900/80 border border-border/70 dark:border-zinc-700/80 text-foreground dark:text-zinc-100 text-xs placeholder:text-muted-foreground/50 dark:placeholder:text-zinc-500 cursor-not-allowed"
         />
       </div>
 
-      <div className="space-y-0.5">
-        <label htmlFor="signup-email" className="text-[11px] font-medium text-foreground/80 pl-1">
+      <div className="space-y-1">
+        <label htmlFor="signup-email" className="text-xs font-medium text-foreground dark:text-zinc-300 pl-1">
           Your Email
         </label>
         <input
@@ -280,12 +258,12 @@ export function EmailSignUpForm() {
           disabled
           autoComplete="email"
           placeholder="name@example.com"
-          className="w-full h-8 px-3.5 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
+          className="w-full h-9 px-3.5 rounded-xl bg-muted/50 dark:bg-zinc-900/80 border border-border/70 dark:border-zinc-700/80 text-foreground dark:text-zinc-100 text-xs placeholder:text-muted-foreground/50 dark:placeholder:text-zinc-500 cursor-not-allowed"
         />
       </div>
 
-      <div className="space-y-0.5">
-        <label htmlFor="signup-password" className="text-[11px] font-medium text-foreground/80 pl-1">
+      <div className="space-y-1">
+        <label htmlFor="signup-password" className="text-xs font-medium text-foreground dark:text-zinc-300 pl-1">
           Password
         </label>
         <div className="relative">
@@ -295,13 +273,13 @@ export function EmailSignUpForm() {
             disabled
             autoComplete="new-password"
             placeholder="Create password"
-            className="w-full h-8 pl-3.5 pr-10 rounded-xl bg-[#f4f4f6] dark:bg-muted/40 text-foreground text-xs placeholder:text-muted-foreground/50 outline-none border-none cursor-not-allowed"
+            className="w-full h-9 pl-3.5 pr-10 rounded-xl bg-muted/50 dark:bg-zinc-900/80 border border-border/70 dark:border-zinc-700/80 text-foreground dark:text-zinc-100 text-xs placeholder:text-muted-foreground/50 dark:placeholder:text-zinc-500 cursor-not-allowed"
           />
           <button
             type="button"
             disabled
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 p-1"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 dark:text-zinc-500 p-1"
           >
             {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
@@ -311,7 +289,7 @@ export function EmailSignUpForm() {
       <button
         type="submit"
         disabled
-        className="w-full h-9 rounded-full bg-muted text-muted-foreground font-medium text-xs shadow-none cursor-not-allowed"
+        className="w-full h-10 rounded-full bg-muted/40 dark:bg-zinc-900/40 text-muted-foreground/60 dark:text-zinc-500 font-medium text-xs border border-border/40 dark:border-zinc-800/40 cursor-not-allowed select-none shadow-none"
       >
         Sign Up (Email disabled)
       </button>

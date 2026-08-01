@@ -154,7 +154,7 @@ export function TrashModal({ open, onOpenChange }: TrashModalProps) {
                     )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      {descendants.length > 0 ? (
+                      {descendants.length > 0 && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <CollapsibleTrigger asChild>
@@ -168,8 +168,6 @@ export function TrashModal({ open, onOpenChange }: TrashModalProps) {
                           </TooltipTrigger>
                           <TooltipContent side="top">Toggle archived children</TooltipContent>
                         </Tooltip>
-                      ) : (
-                        <div className="size-5 shrink-0" />
                       )}
 
                       <TrashRow item={root} showIcon />

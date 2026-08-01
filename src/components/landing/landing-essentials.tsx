@@ -380,7 +380,7 @@ export function LandingEssentials() {
             </div>
           </motion.div>
 
-          {/* Card 5: Starred Favorites */}
+          {/* Card 5: Starred Favorites (Zero-Text-Shake Isolated Star Wrapper) */}
           <motion.div
             onMouseEnter={() => setHoveredCard(5)}
             onMouseLeave={() => setHoveredCard(null)}
@@ -397,24 +397,25 @@ export function LandingEssentials() {
               </p>
             </div>
 
-            <div className="mt-8 rounded-t-2xl border border-border/60 border-b-0 bg-muted/20 p-4 pb-6 relative overflow-hidden -mb-2 space-y-2">
-              <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+            <div className="mt-8 rounded-t-2xl border border-border/60 border-b-0 bg-muted/20 p-4 pt-5 pb-7 relative overflow-hidden -mb-2 space-y-3">
+              <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider pl-0.5">
                 Favorites
               </div>
 
               <motion.div
-                animate={hoveredCard === 5 ? { y: -2 } : { y: 0 }}
+                animate={hoveredCard === 5 ? { y: -3 } : { y: 0 }}
                 transition={snappyTransition}
                 className="flex items-center justify-between p-2.5 rounded-xl bg-background border border-border/70 shadow-2xs text-xs font-sans"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <FileIcon className="w-3.5 h-3.5 text-foreground" />
+                  <FileIcon className="w-3.5 h-3.5 text-foreground shrink-0" />
                   <span className="font-medium text-foreground truncate text-[11px]">Project Vision</span>
                 </div>
-                <motion.div
+                <motion.span
+                  style={{ display: "inline-block", transformOrigin: "center", willChange: "transform" }}
                   animate={
                     hoveredCard === 5
-                      ? { rotate: [0, -14, 14, -8, 8, 0], scale: [1, 1.25, 1] }
+                      ? { rotate: [0, -14, 14, -8, 8, 0], scale: [1, 1.22, 1] }
                       : { rotate: 0, scale: 1 }
                   }
                   transition={{ duration: 0.45, ease: "easeInOut" }}
@@ -426,7 +427,7 @@ export function LandingEssentials() {
                         : "text-muted-foreground/50"
                     }`}
                   />
-                </motion.div>
+                </motion.span>
               </motion.div>
             </div>
           </motion.div>
