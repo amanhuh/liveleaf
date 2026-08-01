@@ -629,4 +629,23 @@ blockquote,
 
 .dark .landing-glow-top {
   background: radial-gradient(600px circle at 50% 0px, oklch(0.40 0.14 150 / 12%), transparent 80%);
-}
+}
+
+/* Custom Text Selection & Mark Highlighting */
+::selection {
+  background-color: rgba(16, 185, 129, 0.22);
+  color: inherit;
+}
+
+mark {
+  background-color: rgba(16, 185, 129, 0.18);
+  color: #059669;
+  padding: 0.1rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.dark mark {
+  background-color: rgba(16, 185, 129, 0.25);
+  color: #6ee7b7;
+}
+

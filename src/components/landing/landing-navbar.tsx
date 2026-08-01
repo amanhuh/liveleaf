@@ -15,33 +15,32 @@ export function LandingNavbar() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-foreground font-semibold tracking-tight hover:opacity-90 transition-opacity"
-          >
-            <Leaf className="w-5 h-5 text-primary" />
-            <span className="font-sans text-lg font-bold">LiveLeaf</span>
-          </Link>
+          <div className="flex-1 flex justify-start">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-foreground font-semibold tracking-tight hover:opacity-90 transition-opacity"
+            >
+              <Leaf className="w-5 h-5 text-primary" />
+              <span className="font-sans text-lg font-bold">LiveLeaf</span>
+            </Link>
+          </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-            <a href="#product" className="hover:text-foreground transition-colors">
-              Product
-            </a>
-            <a href="#essentials" className="hover:text-foreground transition-colors">
-              Organize
-            </a>
-            <a href="#interactive-demo" className="hover:text-foreground transition-colors">
-              Playground
-            </a>
-            <a href="#cta" className="hover:text-foreground transition-colors">
+          <nav className="hidden md:flex flex-1 items-center justify-center gap-8 text-sm font-medium text-muted-foreground">
+            <a href="#features" className="hover:text-foreground transition-colors">
               Features
+            </a>
+            <a href="#workflow" className="hover:text-foreground transition-colors">
+              Workflow
+            </a>
+            <a href="#playground" className="hover:text-foreground transition-colors">
+              Playground
             </a>
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex flex-1 items-center justify-end gap-3">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              className="relative w-9 h-9 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
               aria-label="Toggle color theme"
             >
               <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -63,7 +62,7 @@ export function LandingNavbar() {
           <div className="flex md:hidden items-center gap-2">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              className="relative w-9 h-9 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
               aria-label="Toggle color theme"
             >
               <Sun className="w-4 h-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -93,32 +92,25 @@ export function LandingNavbar() {
             <div className="px-4 pt-3 pb-6 space-y-4 text-center">
               <nav className="flex flex-col gap-3 text-base font-medium text-muted-foreground">
                 <a
-                  href="#product"
+                  href="#features"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2 hover:text-foreground transition-colors border-b border-border/30"
                 >
-                  Product
+                  Features
                 </a>
                 <a
-                  href="#essentials"
+                  href="#workflow"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2 hover:text-foreground transition-colors border-b border-border/30"
                 >
-                  Organize
+                  Workflow
                 </a>
                 <a
-                  href="#interactive-demo"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 hover:text-foreground transition-colors border-b border-border/30"
-                >
-                  Playground
-                </a>
-                <a
-                  href="#cta"
+                  href="#playground"
                   onClick={() => setMobileMenuOpen(false)}
                   className="py-2 hover:text-foreground transition-colors"
                 >
-                  Features
+                  Playground
                 </a>
               </nav>
 

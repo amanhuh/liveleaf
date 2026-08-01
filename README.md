@@ -113,17 +113,33 @@ liveleaf/
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/your-username/liveleaf.git
+git clone https://github.com/amanhuh/liveleaf.git
 cd liveleaf
 pnpm install
 ```
 
 ### 2. Configure Environment Variables
-Create a `.env` file in the root directory:
+Copy the example environment file `.env.example` to create your local `.env`:
+```bash
+cp .env.example .env
+```
+
+Fill in your credentials in `.env`:
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/liveleaf?schema=public"
-BETTER_AUTH_SECRET="your-super-secret-key"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
+# Database connection URL (PostgreSQL)
+DATABASE_URL="postgresql://user:password@localhost:5432/liveleaf?sslmode=require"
+
+# BetterAuth Secrets & App Base URL
+BETTER_AUTH_SECRET="your-32-character-secret-key"
+BETTER_AUTH_URL="http://localhost:3000"
+
+# GitHub OAuth Credentials
+GITHUB_CLIENT_ID="your-github-client-id"
+GITHUB_CLIENT_SECRET="your-github-client-secret"
+
+# Google OAuth Credentials
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ```
 
 ### 3. Database Migration & Setup
