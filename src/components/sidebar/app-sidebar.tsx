@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useState } from "react";
 import {
-  closestCenter,
   pointerWithin,
   DndContext,
   DragEndEvent,
@@ -22,7 +21,6 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
   Sidebar,
   SidebarContent,
@@ -38,7 +36,6 @@ import {
 } from "@/components/ui/sidebar";
 import { PlusIcon, LogOut, ChevronDown, Trash2, Settings, Search } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import TreeItem from "./tree-item";
 import { useGetDocuments, useCreateDocument, useMoveDocument } from "@/hooks/use-document";
 import { SidebarSkeleton } from "@/components/skeleton/sidebar-skeleton";
@@ -82,7 +79,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [isTrashOpen, setIsTrashOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isMac, setIsMac] = useState(false);
+  const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [projectedMove, setProjectedMove] = useState<ProjectedSidebarMove | null>(null);
   const suppressNavigationRef = React.useRef(false);
@@ -464,7 +461,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <TooltipContent side="right" className="flex items-center gap-2">
                 <span>Search</span>
                 <KbdGroup>
-                  <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                  <Kbd>{isMac ? "Cmd" : "Ctrl"}</Kbd>
                   <Kbd>K</Kbd>
                 </KbdGroup>
               </TooltipContent>
@@ -481,8 +478,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <TooltipContent side="right" className="flex items-center gap-2">
                 <span>Trash</span>
                 <KbdGroup>
-                  <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
-                  <Kbd>{isMac ? "⇧" : "Shift"}</Kbd>
+                  <Kbd>{isMac ? "Cmd" : "Ctrl"}</Kbd>
+                  <Kbd>Shift</Kbd>
                   <Kbd>T</Kbd>
                 </KbdGroup>
               </TooltipContent>

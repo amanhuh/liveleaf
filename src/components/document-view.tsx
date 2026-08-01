@@ -10,7 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Fragment, useRef, useEffect, useState, useMemo } from "react";
+import { Fragment, useRef, useEffect, useState } from "react";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import type { DocumentListItemDto } from "@/features/documents";
 import { useRouter, useParams } from "next/navigation";
@@ -26,7 +26,6 @@ import debounce from "lodash/debounce";
 import { DocumentSkeleton } from "@/components/skeleton/document-skeleton";
 import { toast } from "sonner";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { HttpError } from "@/lib/errors";
 import type { Editor } from "@tiptap/core";
 import {
@@ -71,18 +70,14 @@ export default function DocumentView() {
 
   const [saveStatus, setSaveStatus] = useState<"saving" | "saved" | "idle">("idle");
   const savedTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
-  const [isMac, setIsMac] = useState(false);
+  const [isOffline, setIsOffline] = useState(
+    () => typeof navigator !== "undefined" ? !navigator.onLine : false,
+  );
   const [stats, setStats] = useState<{ words: number; chars: number }>({ words: 0, chars: 0 });
-
-  useEffect(() => {
-    setIsMac(typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0);
-  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
-    setIsOffline(typeof navigator !== "undefined" ? !navigator.onLine : false);
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
     return () => {
@@ -154,10 +149,6 @@ export default function DocumentView() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     toast.success("Exported as Markdown");
-  };
-
-  const handleExportPdf = () => {
-    window.print();
   };
 
   const handleCopyContent = () => {
@@ -251,7 +242,6 @@ export default function DocumentView() {
 
                 return (
                   <Fragment key={doc.id}>
-                    {/* Ellipsis placeholder after root item on mobile */}
                     {hasManyItems && isFirst && (
                       <>
                         <BreadcrumbItem className="inline-flex sm:hidden">
@@ -446,7 +436,7 @@ export default function DocumentView() {
         </div>
 
         <footer className="py-3 px-8 text-xs text-muted-foreground/60 select-none border-t border-border/30 flex justify-end">
-          <span>{stats.words} words · {stats.chars} characters</span>
+          <span>{stats.words} words | {stats.chars} characters</span>
         </footer>
       </div>
     </SidebarInset>
@@ -465,7 +455,7 @@ function TitleEditor({
   onSaveStatusChange?: (status: "saving" | "saved" | "idle") => void;
 }) {
   const updateDocument = useUpdateDocument(documentId);
-  const { mutate, isPending } = updateDocument;
+  const { mutate } = updateDocument;
   const [title, setTitle] = useState(initialTitle);
   const localRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = inputRef || localRef;
@@ -498,19 +488,6 @@ function TitleEditor({
       debouncedSaveTitleRef.current?.cancel();
     };
   }, [mutate]);
-
-  // Sync initialTitle when changing documents
-  useEffect(() => {
-    setTitle(initialTitle);
-    isFocusedRef.current = false;
-  }, [documentId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Only sync server updates when not actively focused or saving
-  useEffect(() => {
-    if (!isFocusedRef.current && !updateDocument.isPending) {
-      setTitle(initialTitle);
-    }
-  }, [initialTitle, updateDocument.isPending]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -559,3 +536,4 @@ function getBreadCrumbs(
 
   return breadCrumb;
 }
+
