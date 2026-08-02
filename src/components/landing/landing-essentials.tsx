@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Star,
   ChevronRight,
@@ -15,7 +15,37 @@ import {
   Search,
 } from "lucide-react";
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
+
+function useInView(ref: React.RefObject<Element | null>) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setInView(true);
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+  return inView;
+}
+
 export function LandingEssentials() {
+  const isMobile = useIsMobile();
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [selectionStage, setSelectionStage] = useState<"idle" | "selecting" | "selected">("idle");
   const [dragPhase, setDragPhase] = useState<number>(0);
@@ -23,110 +53,101 @@ export function LandingEssentials() {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-  // Card 1: Selection & Bubble Menu Trigger
+  const card1Ref = useRef<HTMLDivElement>(null);
+  const card2Ref = useRef<HTMLDivElement>(null);
+  const card3Ref = useRef<HTMLDivElement>(null);
+  const card4Ref = useRef<HTMLDivElement>(null);
+  const card5Ref = useRef<HTMLDivElement>(null);
+
+  const card1InView = useInView(card1Ref);
+  const card2InView = useInView(card2Ref);
+  const card3InView = useInView(card3Ref);
+  const card4InView = useInView(card4Ref);
+  const card5InView = useInView(card5Ref);
+
+  const card1Active = isMobile ? card1InView : hoveredCard === 1 || selectionStage === "selected";
+  const card4Active = isMobile ? card4InView : hoveredCard === 4;
+  const card5Active = isMobile ? card5InView : hoveredCard === 5;
+
   useEffect(() => {
-    if (hoveredCard === 1) {
+    const isActive = isMobile ? card1InView : hoveredCard === 1;
+    if (isActive) {
       setSelectionStage("selecting");
-      const timer = setTimeout(() => {
-        setSelectionStage("selected");
-      }, 200);
+      const timer = setTimeout(() => setSelectionStage("selected"), 200);
       return () => clearTimeout(timer);
     } else {
       setSelectionStage("idle");
     }
-  }, [hoveredCard]);
+  }, [hoveredCard, isMobile, card1InView]);
 
-  // Card 2: 5-Phase Synchronized Drag & Drop Loop
   useEffect(() => {
-    if (hoveredCard === 2) {
-      let isMounted = true;
-
-      const runSequence = async () => {
-        while (isMounted) {
-          // Phase 1: Pickup lift
-          setDragPhase(1);
-          await new Promise((r) => setTimeout(r, 350));
-          if (!isMounted) break;
-
-          // Phase 2: Drag over folder (whole tree highlight)
-          setDragPhase(2);
-          await new Promise((r) => setTimeout(r, 550));
-          if (!isMounted) break;
-
-          // Phase 3: Drag to top indicator line
-          setDragPhase(3);
-          await new Promise((r) => setTimeout(r, 450));
-          if (!isMounted) break;
-
-          // Phase 4: Drop at top & Hold Pause
-          setDragPhase(4);
-          await new Promise((r) => setTimeout(r, 1200));
-          if (!isMounted) break;
-
-          // Phase 5: Return to bottom
-          setDragPhase(5);
-          await new Promise((r) => setTimeout(r, 700));
-          if (!isMounted) break;
-
-          setDragPhase(0);
-          await new Promise((r) => setTimeout(r, 800));
-        }
-      };
-
-      runSequence();
-
-      return () => {
-        isMounted = false;
-        setDragPhase(0);
-      };
-    } else {
+    const isActive = isMobile ? card2InView : hoveredCard === 2;
+    if (!isActive) {
       setDragPhase(0);
+      return;
     }
-  }, [hoveredCard]);
 
-  // Card 3: Typing Search Sequence (Results strictly after typing ends)
+    let mounted = true;
+    const run = async () => {
+      while (mounted) {
+        setDragPhase(1);
+        await new Promise((r) => setTimeout(r, 350));
+        if (!mounted) break;
+        setDragPhase(2);
+        await new Promise((r) => setTimeout(r, 550));
+        if (!mounted) break;
+        setDragPhase(3);
+        await new Promise((r) => setTimeout(r, 450));
+        if (!mounted) break;
+        setDragPhase(4);
+        await new Promise((r) => setTimeout(r, 1200));
+        if (!mounted) break;
+        setDragPhase(5);
+        await new Promise((r) => setTimeout(r, 700));
+        if (!mounted) break;
+        setDragPhase(0);
+        await new Promise((r) => setTimeout(r, 800));
+      }
+    };
+    run();
+    return () => { mounted = false; setDragPhase(0); };
+  }, [hoveredCard, isMobile, card2InView]);
+
   useEffect(() => {
-    if (hoveredCard === 3) {
-      setTypedQuery("");
-      setShowResults(false);
-      setIsSearching(false);
-
-      const target = "design";
-      let currentIndex = 0;
-
-      const typingInterval = setInterval(() => {
-        if (currentIndex < target.length) {
-          setTypedQuery(target.slice(0, currentIndex + 1));
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          setIsSearching(true);
-          setTimeout(() => {
-            setIsSearching(false);
-            setShowResults(true);
-          }, 350);
-        }
-      }, 120);
-
-      return () => clearInterval(typingInterval);
-    } else {
+    const isActive = isMobile ? card3InView : hoveredCard === 3;
+    if (!isActive) {
       setTypedQuery("");
       setIsSearching(false);
       setShowResults(false);
+      return;
     }
-  }, [hoveredCard]);
 
-  const snappyTransition = {
-    type: "spring" as const,
-    stiffness: 380,
-    damping: 24,
-  };
+    setTypedQuery("");
+    setShowResults(false);
+    setIsSearching(false);
 
-  const smoothDragTransition = {
-    type: "spring" as const,
-    stiffness: 140,
-    damping: 20,
-  };
+    const target = "design";
+    let idx = 0;
+    const interval = setInterval(() => {
+      if (idx < target.length) {
+        setTypedQuery(target.slice(0, idx + 1));
+        idx++;
+      } else {
+        clearInterval(interval);
+        setIsSearching(true);
+        setTimeout(() => {
+          setIsSearching(false);
+          setShowResults(true);
+        }, 350);
+      }
+    }, 120);
+    return () => clearInterval(interval);
+  }, [hoveredCard, isMobile, card3InView]);
+
+  const snappyTransition = { type: "spring" as const, stiffness: 380, damping: 24 };
+  const smoothDragTransition = { type: "spring" as const, stiffness: 140, damping: 20 };
+
+  const card3Query = (isMobile ? card3InView : hoveredCard === 3) ? typedQuery || "Search..." : "Search...";
 
   return (
     <section id="workflow" className="py-24 bg-background">
@@ -141,11 +162,11 @@ export function LandingEssentials() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1: Block Editor (overflow-hidden to fix bottom corner bleed) */}
           <motion.div
-            onMouseEnter={() => setHoveredCard(1)}
-            onMouseLeave={() => setHoveredCard(null)}
-            whileHover={{ y: -3 }}
+            ref={card1Ref}
+            onMouseEnter={() => !isMobile && setHoveredCard(1)}
+            onMouseLeave={() => !isMobile && setHoveredCard(null)}
+            whileHover={!isMobile ? { y: -3 } : {}}
             transition={snappyTransition}
             className="md:col-span-2 group p-8 pb-0 rounded-3xl border border-border/50 bg-card hover:border-foreground/25 hover:shadow-xl transition-colors duration-200 flex flex-col justify-between relative overflow-hidden cursor-pointer"
           >
@@ -158,17 +179,16 @@ export function LandingEssentials() {
               </p>
             </div>
 
-            {/* Inset bottom card frame */}
             <div className="mt-8 rounded-t-2xl border border-border/60 border-b-0 bg-muted/20 p-5 pb-8 relative overflow-hidden -mb-2">
               <div className="text-xs sm:text-sm font-sans text-muted-foreground leading-relaxed relative pt-6">
                 <AnimatePresence>
-                  {(selectionStage === "selected" || hoveredCard === 1) && (
+                  {card1Active && (
                     <motion.div
                       initial={{ opacity: 0, y: 6, scale: 0.94 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 4, scale: 0.94 }}
                       transition={snappyTransition}
-                      className="absolute top-0 left-[180px] z-20 flex items-center gap-1 bg-popover/95 backdrop-blur-md border border-border/80 shadow-lg rounded-lg p-1 text-muted-foreground"
+                      className="absolute top-0 left-1/2 -translate-x-1/2 md:left-[180px] md:translate-x-0 z-20 flex items-center gap-1 bg-popover/95 backdrop-blur-md border border-border/80 shadow-lg rounded-lg p-1 text-muted-foreground"
                     >
                       <div className="p-1.5 rounded bg-muted text-foreground">
                         <Bold className="w-3.5 h-3.5" />
@@ -189,17 +209,13 @@ export function LandingEssentials() {
                 <span>Great ideas need room to breathe. LiveLeaf gives you a calm, distraction-free environment to think, draft, and format your thoughts with </span>
                 <span className="relative inline-block">
                   <motion.span
-                    animate={
-                      hoveredCard === 1 || selectionStage === "selected"
-                        ? { width: "100%" }
-                        : { width: "0%" }
-                    }
+                    animate={card1Active ? { width: "100%" } : { width: "0%" }}
                     transition={{ duration: 0.25, ease: "easeOut" }}
                     className="absolute inset-0 bg-emerald-500/20 dark:bg-emerald-500/25 rounded z-0 pointer-events-none"
                   />
                   <span
                     className={`relative z-10 font-medium px-0.5 transition-colors duration-200 ${
-                      hoveredCard === 1 || selectionStage === "selected"
+                      card1Active
                         ? "text-emerald-950 dark:text-emerald-200 font-semibold"
                         : "text-muted-foreground"
                     }`}
@@ -212,11 +228,11 @@ export function LandingEssentials() {
             </div>
           </motion.div>
 
-          {/* Card 2: Page Hierarchy Drag & Drop */}
           <motion.div
-            onMouseEnter={() => setHoveredCard(2)}
-            onMouseLeave={() => setHoveredCard(null)}
-            whileHover={{ y: -3 }}
+            ref={card2Ref}
+            onMouseEnter={() => !isMobile && setHoveredCard(2)}
+            onMouseLeave={() => !isMobile && setHoveredCard(null)}
+            whileHover={!isMobile ? { y: -3 } : {}}
             transition={snappyTransition}
             className="group p-8 pb-0 rounded-3xl border border-border/50 bg-card hover:border-foreground/25 hover:shadow-xl transition-colors duration-200 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
@@ -243,11 +259,7 @@ export function LandingEssentials() {
               </AnimatePresence>
 
               <motion.div
-                animate={
-                  dragPhase === 3 || dragPhase === 4
-                    ? { y: 40 }
-                    : { y: 0 }
-                }
+                animate={dragPhase === 3 || dragPhase === 4 ? { y: 40 } : { y: 0 }}
                 transition={smoothDragTransition}
                 className="space-y-1"
               >
@@ -266,7 +278,7 @@ export function LandingEssentials() {
                   <div className="pl-5 space-y-1 text-muted-foreground text-xs">
                     <div className="flex items-center gap-1.5 h-7">
                       <FileIcon className="w-3.5 h-3.5 text-muted-foreground/70" />
-                      <span>Mission & Principles</span>
+                      <span>Mission &amp; Principles</span>
                     </div>
                   </div>
                 </div>
@@ -295,11 +307,11 @@ export function LandingEssentials() {
             </div>
           </motion.div>
 
-          {/* Card 3: Instant Search */}
           <motion.div
-            onMouseEnter={() => setHoveredCard(3)}
-            onMouseLeave={() => setHoveredCard(null)}
-            whileHover={{ y: -3 }}
+            ref={card3Ref}
+            onMouseEnter={() => !isMobile && setHoveredCard(3)}
+            onMouseLeave={() => !isMobile && setHoveredCard(null)}
+            whileHover={!isMobile ? { y: -3 } : {}}
             transition={snappyTransition}
             className="group p-8 pb-0 rounded-3xl border border-border/50 bg-card hover:border-foreground/25 hover:shadow-xl transition-colors duration-200 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
@@ -316,7 +328,7 @@ export function LandingEssentials() {
               <div className="flex items-center gap-2 border-b border-border/50 pb-2">
                 <Search className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-foreground font-medium font-mono text-[11px]">
-                  {hoveredCard === 3 ? typedQuery || "Search..." : "Search..."}
+                  {card3Query}
                 </span>
                 {isSearching && <Loader2 className="w-3 h-3 ml-auto animate-spin text-muted-foreground" />}
               </div>
@@ -352,11 +364,11 @@ export function LandingEssentials() {
             </div>
           </motion.div>
 
-          {/* Card 4: Continuous Auto-Save */}
           <motion.div
-            onMouseEnter={() => setHoveredCard(4)}
-            onMouseLeave={() => setHoveredCard(null)}
-            whileHover={{ y: -3 }}
+            ref={card4Ref}
+            onMouseEnter={() => !isMobile && setHoveredCard(4)}
+            onMouseLeave={() => !isMobile && setHoveredCard(null)}
+            whileHover={!isMobile ? { y: -3 } : {}}
             transition={snappyTransition}
             className="group p-8 pb-0 rounded-3xl border border-border/50 bg-card hover:border-foreground/25 hover:shadow-xl transition-colors duration-200 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
@@ -371,7 +383,7 @@ export function LandingEssentials() {
 
             <div className="mt-8 rounded-t-2xl border border-border/60 border-b-0 bg-muted/20 p-5 pb-6 relative overflow-hidden -mb-2 flex items-center justify-center gap-2 font-mono text-xs text-muted-foreground">
               <span className="relative flex h-2 w-2">
-                {hoveredCard === 4 && (
+                {card4Active && (
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 )}
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -380,11 +392,11 @@ export function LandingEssentials() {
             </div>
           </motion.div>
 
-          {/* Card 5: Starred Favorites (Zero-Text-Shake Isolated Star Wrapper) */}
           <motion.div
-            onMouseEnter={() => setHoveredCard(5)}
-            onMouseLeave={() => setHoveredCard(null)}
-            whileHover={{ y: -3 }}
+            ref={card5Ref}
+            onMouseEnter={() => !isMobile && setHoveredCard(5)}
+            onMouseLeave={() => !isMobile && setHoveredCard(null)}
+            whileHover={!isMobile ? { y: -3 } : {}}
             transition={snappyTransition}
             className="group p-8 pb-0 rounded-3xl border border-border/50 bg-card hover:border-foreground/25 hover:shadow-xl transition-colors duration-200 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
@@ -403,7 +415,7 @@ export function LandingEssentials() {
               </div>
 
               <motion.div
-                animate={hoveredCard === 5 ? { y: -3 } : { y: 0 }}
+                animate={card5Active ? { y: -3 } : { y: 0 }}
                 transition={snappyTransition}
                 className="flex items-center justify-between p-2.5 rounded-xl bg-background border border-border/70 shadow-2xs text-xs font-sans"
               >
@@ -414,15 +426,19 @@ export function LandingEssentials() {
                 <motion.span
                   style={{ display: "inline-block", transformOrigin: "center", willChange: "transform" }}
                   animate={
-                    hoveredCard === 5
+                    card5Active
                       ? { rotate: [0, -14, 14, -8, 8, 0], scale: [1, 1.22, 1] }
                       : { rotate: 0, scale: 1 }
                   }
-                  transition={{ duration: 0.45, ease: "easeInOut" }}
+                  transition={
+                    isMobile
+                      ? { duration: 0.45, ease: "easeInOut", repeat: Infinity, repeatDelay: 1.8 }
+                      : { duration: 0.45, ease: "easeInOut" }
+                  }
                 >
                   <Star
                     className={`w-4 h-4 transition-colors duration-200 ${
-                      hoveredCard === 5
+                      card5Active
                         ? "fill-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]"
                         : "text-muted-foreground/50"
                     }`}

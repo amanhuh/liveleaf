@@ -79,7 +79,6 @@ function SocialAuthGroupInner() {
 
   return (
     <div className="space-y-3 pt-1">
-      {/* GitHub Sign-In Button */}
       <button
         id="github-signin-btn"
         onClick={() => handleOAuth("github")}
@@ -101,7 +100,6 @@ function SocialAuthGroupInner() {
         <span>{activeProvider === "github" ? "Redirecting to GitHub..." : "Continue with GitHub"}</span>
       </button>
 
-      {/* Google Sign-In Button */}
       <button
         id="google-signin-btn"
         onClick={() => handleOAuth("google")}

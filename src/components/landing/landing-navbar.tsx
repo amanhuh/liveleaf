@@ -37,7 +37,7 @@ export function LandingNavbar() {
             </a>
           </nav>
 
-          <div className="hidden md:flex flex-1 items-center justify-end gap-3">
+          <div className="hidden md:flex flex-1 items-center justify-end gap-5">
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="relative w-9 h-9 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
@@ -47,13 +47,20 @@ export function LandingNavbar() {
               <Moon className="absolute w-4 h-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             </button>
 
+            <Link
+              href="/sign-in"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign in
+            </Link>
+
             <Button
               asChild
               size="sm"
               className="bg-foreground text-background hover:bg-foreground/90 font-medium tracking-tight rounded-lg px-4 h-9 shadow-xs"
             >
               <Link href="/sign-up">
-                Start writing — it's free
+                Start writing
                 <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
               </Link>
             </Button>

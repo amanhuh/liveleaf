@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Code,
   FileText,
@@ -36,7 +37,7 @@ export function LandingFeatures() {
             <div className="space-y-3 pt-2">
               <div
                 onClick={() => setActiveFeature("slash")}
-                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                className={`p-4 rounded-xl border transition-all ease-in-out duration-200 cursor-pointer ${
                   activeFeature === "slash"
                     ? "bg-background border-border shadow-xs text-foreground"
                     : "bg-transparent border-transparent hover:bg-background/40 text-muted-foreground"
@@ -55,7 +56,7 @@ export function LandingFeatures() {
 
               <div
                 onClick={() => setActiveFeature("bubble")}
-                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                className={`p-4 rounded-xl border transition-all ease-in-out duration-200 cursor-pointer ${
                   activeFeature === "bubble"
                     ? "bg-background border-border shadow-xs text-foreground"
                     : "bg-transparent border-transparent hover:bg-background/40 text-muted-foreground"
@@ -74,7 +75,7 @@ export function LandingFeatures() {
 
               <div
                 onClick={() => setActiveFeature("rich")}
-                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                className={`p-4 rounded-xl border transition-all ease-in-out duration-200 cursor-pointer ${
                   activeFeature === "rich"
                     ? "bg-background border-border shadow-xs text-foreground"
                     : "bg-transparent border-transparent hover:bg-background/40 text-muted-foreground"
@@ -101,9 +102,17 @@ export function LandingFeatures() {
                 <span className="font-medium text-foreground">Reading List</span>
               </div>
 
-              <div className="flex-1 space-y-6">
+              <div className="flex-1 space-y-6 relative">
+                <AnimatePresence mode="wait">
                 {activeFeature === "slash" && (
-                  <div className="space-y-4">
+                  <motion.div
+                    key="slash"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="space-y-4"
+                  >
                     <h3 className="font-serif text-2xl font-medium text-foreground">
                       Reading list — Literature
                     </h3>
@@ -127,11 +136,18 @@ export function LandingFeatures() {
                         <div>Code Block</div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 {activeFeature === "bubble" && (
-                  <div className="space-y-4">
+                  <motion.div
+                    key="bubble"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="space-y-4"
+                  >
                     <h3 className="font-serif text-2xl font-medium text-foreground">
                       Reading list — Literature
                     </h3>
@@ -158,11 +174,18 @@ export function LandingFeatures() {
                         whisper louder than noise.
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 {activeFeature === "rich" && (
-                  <div className="space-y-5">
+                  <motion.div
+                    key="rich"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="space-y-5"
+                  >
                     <h3 className="font-serif text-2xl font-medium text-foreground">
                       Structured Thoughts
                     </h3>
@@ -170,7 +193,7 @@ export function LandingFeatures() {
                       Deep concentration allows long-term value creation.
                     </p>
                     <blockquote className="pl-4 border-l-2 border-border text-muted-foreground italic text-xs py-1">
-                      "Clarity of thought requires clarity of tool."
+                      &ldquo;Clarity of thought requires clarity of tool.&rdquo;
                     </blockquote>
                     <ul className="list-disc pl-5 space-y-1.5 text-xs text-foreground/90">
                       <li>Rule 1: Work deeply without context switching</li>
@@ -179,10 +202,11 @@ export function LandingFeatures() {
                     </ul>
                     <div className="p-3 rounded-lg border border-border bg-muted/30 font-mono text-xs text-foreground">
                       <span className="font-bold text-foreground">const</span> focus ={" "}
-                      <span className="text-muted-foreground font-medium">"uninterrupted"</span>;
+                      <span className="text-muted-foreground font-medium">&ldquo;uninterrupted&rdquo;</span>;
                     </div>
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
 
               <div className="pt-4 border-t border-border/40 text-[11px] text-muted-foreground flex justify-end font-mono">
