@@ -308,8 +308,8 @@ export function LandingHero() {
                   )}
                 </div>
 
-                <div className="pt-6 mt-8 border-t border-border/40 flex items-center justify-end text-xs text-muted-foreground font-mono">
-                  <div>132 words · 742 characters</div>
+                <div className="absolute bottom-0 right-0 w-full mt-8 h-12 border-t border-border/40 flex items-center justify-end text-xs text-muted-foreground">
+                  <div className="mr-5">132 words · 742 characters</div>
                 </div>
               </div>
             </div>
