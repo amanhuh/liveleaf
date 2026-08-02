@@ -221,7 +221,7 @@ export function EmailSignInForm() {
         disabled
         className="w-full h-10 rounded-full bg-muted/40 dark:bg-zinc-900/40 text-muted-foreground/60 dark:text-zinc-500 font-medium text-xs border border-border/40 dark:border-zinc-800/40 cursor-not-allowed select-none shadow-none"
       >
-        Log in (Email disabled)
+        Sign in (Email disabled)
       </button>
     </form>
   );
